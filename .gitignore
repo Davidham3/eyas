@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# venv / uv
+.venv/
+uv.lock.bak
+
+# Sphinx build artifacts
+docs/_build/
+/site/
+
+# Tests & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local quality-gate tool metrics
+.metrics/
+
+# Build/measurement artifacts (coverage lcov from the local gate)
+target/
+
+# Experiment artifacts
+outputs/
+outputs_*/
+runs/
+*.log
+io_debug.log
+
+# Runtime helper libs for engine probes
+runtime_libs/
+
+# Data & models (not tracked)
+data/
+datasets/
+models/
+checkpoints/
+cache/
+.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Scratch space (any dir named tmp — keeps regenerable artifacts out of git)
+tmp/
+
+# Local developer-only config (machine-specific endpoints; never committed)
+uv.toml
+.env
+logs/
