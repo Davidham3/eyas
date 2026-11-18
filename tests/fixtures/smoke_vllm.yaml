@@ -1,0 +1,41 @@
+# GPU smoke: zero dataset (demo_shapes synthetic PNGs) + a real vLLM engine.
+# Purpose is only to validate the GPU channel: uv sync --extra vllm ->
+# vLLM loads a real model -> eyas run completes end to end and writes
+# result.json. Does not measure algorithm quality (CoT is meaningless on
+# demo_shapes).
+#
+# Run it on any GPU host (override the model_path placeholder):
+#   uv sync --extra vllm
+#   uv run eyas run --config tests/fixtures/smoke_vllm.yaml \
+#     --set backend.params.model_path=/path/to/Qwen3.5-9B
+run:
+  name: smoke_vllm
+  seed: 42
+
+task:
+  name: demo_shapes   # built-in zero-data task: auto-generates solid-color square PNGs
+  params: {}
+
+protocol:
+  name: identity
+
+backend:
+  name: vllm
+  params:
+    model_path: /path/to/Qwen3.5-9B
+    max_inflight: 32
+    engine_kwargs:
+      enforce_eager: true
+
+eval_model:
+  name: absolute      # absolute scoring (accuracy); assembly validation passes
+
+budget:
+  name: flat
+  params: {}  # FlatBudget is parameterless: every candidate, full split (explicit pin)
+
+strategy:
+  name: cot
+  params:
+    base_prompt: "What color is the square? Answer with one color name."
+    cot_suffix: "Let's think step by step."
