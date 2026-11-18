@@ -1,0 +1,41 @@
+# Demo: zero-data VQA pipeline demo (deterministic generated shape PNGs +
+# mock backend), mirroring tests/fixtures/demo_cot.yaml's shape.
+# The mock alternates ["blue", "square"], so a color question is right when the
+# palette cycles to blue (every 4th color question) and a shape question when
+# the shape is square (every other shape question) -- about 0.375 accuracy. The
+# answers are scripted, not seen: this still only validates the end-to-end
+# path (config -> assembly -> OptimizerLoop -> persist -> eyas report).
+#
+# Run: uv run eyas run --config tests/fixtures/demo_vqa.yaml
+# Report: uv run eyas report --run outputs/demo_vqa/<timestamp>
+run:
+  name: demo_vqa
+  seed: 42
+
+task:
+  name: demo_vqa   # built-in zero-data task: auto-generates the deterministic shape corpus
+  params: {}
+
+protocol:
+  name: identity   # variants are meaningless for VQA (no choice order exists)
+
+backend:
+  name: mock
+  params:
+    responses: ["blue", "square"]
+    cycle: true
+
+eval_model:
+  name: absolute      # absolute scoring (accuracy); task objective can produce it -> assembly validation passes
+
+budget:
+  name: flat
+  params: {}  # FlatBudget is parameterless: every candidate, full split (explicit pin)
+
+# Sampling tiers (optional): algorithm-facing knobs only -- thinking/seed always
+# come from backend.sampling (the deployment layer)
+sampling_profiles:
+  generate: { temperature: 0.9, max_new_tokens: 512 }
+
+strategy:
+  name: raw           # degenerate method: evaluate the seed (task.default_prompt) once
