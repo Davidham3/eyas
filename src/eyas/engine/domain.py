@@ -4,7 +4,7 @@ Key design points:
 - ``Prompt``'s sole identity is ``prompt_hash`` (identity rule): ``text``
   / ``metadata`` do not participate in ``__eq__`` / ``__hash__``, so labels can
   never leak into identity.
-- ``Evaluation`` carries durable ``SampleOutcome`` (A7): per-sample predictions
+- ``Evaluation`` carries durable ``SampleOutcome``: per-sample predictions
   persist with the evaluation and are backfilled on cache hits too, so
   gradient/compare-style methods read per-sample errors directly instead of
   inferring them from aggregate metrics.
@@ -14,7 +14,7 @@ Key design points:
   optimizer, so no Pareto-front container is built (multi-objective search is
   not a goal of the current method set); where a method needs a position-
   aligned working set (evoprompt's DE), it lives in the method's typed state.
-- ``OptimizerState`` is typed serializable state (A6); serialization is the
+- ``OptimizerState`` is typed serializable state; serialization is the
   checkpoint.
 """
 
@@ -151,7 +151,7 @@ class Cost:
 
 @dataclass(frozen=True)
 class SampleOutcome:
-    """Per-sample durable observation (A7). correct=None means the judge did
+    """Per-sample durable observation. correct=None means the judge did
     not decide (not "wrong")."""
 
     sample_id: str
@@ -312,7 +312,7 @@ class Archive:
 
 
 class OptimizerState(ABC):
-    """Typed optimizer state (A6): serializable = naturally checkpoint / resume."""
+    """Typed optimizer state: serializable = naturally checkpoint / resume."""
 
     @abstractmethod
     def to_json(self) -> dict[str, Any]: ...

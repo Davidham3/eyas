@@ -1,5 +1,5 @@
 """Capability declarations and assembly-time compatibility validation
-(contract-first, Axioms A1/A2/A5).
+(contract-first).
 
 Every registered piece declares not only a signature but capabilities: which
 metrics a task exposes, which evaluation semantics an eval model covers and
@@ -45,7 +45,7 @@ class TaskCap:
 
 @dataclass(frozen=True)
 class ResourceProfile:
-    """Resource profile (A5): multi-image cap + context reserve. Validated at
+    """Resource profile: multi-image cap + context reserve. Validated at
     assembly time as the intersection with backend limits."""
 
     max_images: int | None = None
@@ -138,7 +138,7 @@ def _check_objectives(cap: CapSpec, facts: _AssemblyFacts) -> list[str]:
 
 
 def _check_resources(cap: CapSpec, facts: _AssemblyFacts) -> list[str]:
-    # Rule 3 (A5): the strategy's resource profile must not exceed backend limits
+    # Rule 3: the strategy's resource profile must not exceed backend limits
     violations: list[str] = []
     rp = cap.resource_profile
     backend = facts.backend

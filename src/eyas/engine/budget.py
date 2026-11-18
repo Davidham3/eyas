@@ -1,4 +1,4 @@
-"""Budget allocation layer (Axiom A3: budget is a first-class citizen with sovereignty).
+"""Budget allocation layer: budget is a first-class citizen with sovereignty.
 
 The budget is an explicit, stateful ``BudgetAllocator`` (propose_load /
 observe lifecycle), decoupled from the pure-function selection; because it is
@@ -226,9 +226,9 @@ class BanditBudget:
         overlapping the split end is legitimate — the last partial window is
         served as-is (the official algorithm draws fixed-size batches reusing
         samples across rounds; our fixed sequential windows end on a short tail
-        when the split is not a multiple — a data fact, not parameter rewriting;
-        registered in docs/baselines-fidelity.md §4.5 D7) — so ``eval_rounds ×
-        samples_per_eval`` is not required to divide the split. A pull starting
+        when the split is not a multiple — a data fact, not parameter
+        rewriting) — so ``eval_rounds × samples_per_eval`` is not required to
+        divide the split. A pull starting
         **at or beyond** the split end is a misconfiguration and raises
         ``ValueError`` carrying the arithmetic (rounds, spe, split size, the
         failing pull) plus both remediation values for the configurator:

@@ -5,7 +5,7 @@ Conventions:
   configures;
 - Configuration happens only at the run entry point (run_experiment): the calling
   thread does nothing but a **bounded queue enqueue** (drops and counts when full;
-  emit never blocks, never raises). Two channels (docs/10 §10): diagnostic key
+  emit never blocks, never raises). Two channels: diagnostic key
   events (``key_event`` / ``extra={"eyas_priority": True}``) ride an UNBOUNDED
   priority queue the writer thread drains first — evidence logs survive
   backpressure; ordinary INFO rides the droppable queue.
@@ -84,7 +84,7 @@ class _EnqueueHandler(logging.Handler):
     the drop count is exposed via dropped_count(), and the writer thread's drop report
     restores visibility after recovery.
 
-    Two channels (docs/10 §10): records flagged ``extra={"eyas_priority": True}``
+    Two channels: records flagged ``extra={"eyas_priority": True}``
     (key diagnostic events — assembly, round echo, planner rejects) go on an
     UNBOUNDED priority queue the writer thread drains first; ordinary INFO rides
     the droppable bounded queue. Key evidence therefore survives backpressure —
@@ -217,8 +217,8 @@ def resolve_log_level(env: Mapping[str, str] | None = None) -> int:
 
 
 def key_event(logger: logging.Logger, msg: str, *args: Any) -> None:
-    """Emit a diagnostic KEY EVENT at INFO on the priority-retained channel
-    (docs/10 §10): the record rides the unbounded priority queue, so a full or
+    """Emit a diagnostic KEY EVENT at INFO on the priority-retained channel:
+    the record rides the unbounded priority queue, so a full or
     stalled droppable queue can never bury the run's evidence trail (assembly,
     round echo, planner rejects). Key events are RARE by construction — an emit
     site that fires per request is ordinary traffic and must not use this."""

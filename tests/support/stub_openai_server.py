@@ -1,6 +1,6 @@
 """Pure-stdlib stub of the OpenAI chat-completions endpoint.
 
-The tutorials in ``docs/`` are executed verbatim by CI against this stub, so
+The documentation tutorials are executed verbatim by CI against this stub, so
 answers must be deterministic across requests, server instances and processes
 (no ``hash()``, no set-iteration order — only ``hashlib.sha256`` over
 canonical JSON). Serves ``POST /v1/chat/completions`` on an ephemeral port

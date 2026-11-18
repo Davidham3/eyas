@@ -141,7 +141,7 @@ class TestSetup:
 
 
 def test_priority_channel_survives_a_full_droppable_queue(tmp_path, monkeypatch):
-    """docs/10 §10 two channels: a full droppable queue loses ordinary INFO but
+    """Two channels: a full droppable queue loses ordinary INFO but
     can never bury a key_event — the writer thread drains the UNBOUNDED priority
     queue first, so the run's evidence trail survives backpressure and lands in
     the framework.log ahead of the recovered backlog."""
