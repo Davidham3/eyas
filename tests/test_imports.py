@@ -4,6 +4,14 @@ def test_version():
     assert eyas.__version__
 
 
+def test_version_matches_installed_metadata():
+    import importlib.metadata
+
+    import eyas
+
+    assert eyas.__version__ == importlib.metadata.version("eyas")
+
+
 def test_builtin_components_registered():
     import eyas.builtin  # noqa: F401
     from eyas import registry
