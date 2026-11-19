@@ -17,7 +17,7 @@ mean ± σ over the fixed seeds 42/43/44:
 | 0.736 ± 0.004 | **0.788 ± 0.029** | +5.2 |
 
 No weights touched: the search replaced one sentence of the prompt, and the held-out gain above
-is what it bought, measured with the two config files you are about to run, against a self-hosted
+is what it bought, measured with the story config you are about to run, against a self-hosted
 OpenAI-compatible endpoint. At n = 100 a single reading carries a ±4 to 5 pp noise band, so the
 table quotes three-seed means; every seed lifted, and the σ shows the loop's real run-to-run
 spread. The published in-process-vLLM wave of the same configs tells the same story with an
@@ -31,28 +31,134 @@ judge-channel and token accounting on every cell), is the
 
 ## Run the story
 
-Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
+Requires Python: core 3.12–3.14; vLLM extra verified on 3.12. Install with
+[uv](https://docs.astral.sh/uv/):
 
 ```bash
-git clone https://github.com/Davidham3/eyas.git && cd eyas
-uv sync --extra api --extra prepare
+uv pip install "eyas[api]"     # light HTTP client: rendering happens server-side
 ```
 
-Build the exact splits the story config points at, then run the baseline and the optimization:
+Extras compose; pick one inference shape and add `prepare` once to build datasets — this page's
+story path is `uv pip install "eyas[api,prepare]"`:
+
+| Install | What you get | Notes |
+| --- | --- | --- |
+| `uv pip install "eyas[vllm]"` | In-process vLLM engine | Recommended default; brings its own torch/transformers |
+| `uv pip install "eyas[api]"` | OpenAI-compatible HTTP client | Lightest option; rendering happens server-side |
+| `uv pip install "eyas[prepare]"` | `eyas prepare` dataset download/convert | Needed once per dataset; heavy reader stack (datasets, pyarrow) |
+
+Smoke-test the install before touching data: this built-in `demo_shapes` task generates its own
+PNGs (no dataset, no GPU), so the whole loop runs wherever you have an endpoint. The config
+points at a local server; `export EYAS_API_KEY` with your key and point `base_url` at any
+OpenAI-compatible endpoint to run it for real:
 
 ```bash
-uv run eyas prepare --dataset textvqa
-uv run eyas run --cell textvqa/raw --variant openai
-uv run eyas run --cell textvqa/opro --variant openai
+export EYAS_API_KEY="${EYAS_API_KEY:-local-placeholder}"   # any non-empty value for a local server
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+cat > "$tmp" <<'YAML'
+run:
+  name: demo_shapes
+  seed: 42
+
+task:
+  name: demo_shapes   # built-in zero-data task: generates solid-color square PNGs
+  params: {}
+
+protocol:
+  name: identity
+
+backend:
+  name: openai
+  params:
+    base_url: http://localhost:8000/v1   # point this at any OpenAI-compatible endpoint
+    model: qwen3.5-9b
+    api_key_env: EYAS_API_KEY
+    max_inflight: 16
+  sampling:
+    thinking: false
+
+eval_model:
+  name: absolute
+
+budget:
+  name: flat
+  params: {}  # FlatBudget is parameterless: every candidate, full split
+
+strategy:
+  name: raw   # evaluate the seed prompt once: the fastest end-to-end check
+YAML
+eyas run --config "$tmp" --output-dir outputs/eyas_smoke
 ```
 
-Each run writes a self-contained run directory under `outputs/<run.name>/<timestamp>` holding
+Build the exact splits the story config points at:
+
+```bash
+eyas prepare --dataset textvqa
+```
+
+Write `quickstart_textvqa_opro.yaml` — the experiment is the YAML, and the whole connection to
+your model is two lines:
+
+```yaml
+run:
+  name: quickstart_textvqa_opro
+  seed: 42
+  final_eval:
+    split: test
+
+task:
+  name: vqa
+  params:
+    data_dir: datasets/quickstart/textvqa/data
+    images_dir: datasets/quickstart/textvqa/images
+
+backend:
+  name: openai
+  params:
+    base_url: http://localhost:8000/v1   # any OpenAI-compatible endpoint
+    model: qwen3.5-9b                    # the story model: your served model name
+    api_key_env: EYAS_API_KEY            # the environment variable holding your key
+    max_inflight: 16
+  sampling:
+    thinking: false
+
+protocol:
+  name: identity
+
+eval_model:
+  name: absolute
+
+budget:
+  name: flat
+  params: {}  # FlatBudget is parameterless: every candidate, full split
+
+strategy:
+  name: opro
+  params:
+    rounds: 4
+```
+
+Then run it:
+
+```bash
+eyas run --config quickstart_textvqa_opro.yaml
+```
+
+Each run writes a self-contained run directory under `outputs/<run.name>/<timestamp>` by default,
+holding
 `result.json` (best prompt, history, cost), `checkpoint.json`, and `status.json` (live phase /
-round / cost). One config, two backend shapes: an in-process vLLM engine (`uv sync --extra vllm`,
-the recommended default) or any OpenAI-compatible endpoint (`uv sync --extra api`); the config's
-two lines `base_url` and `api_key_env` are the whole connection to your model. No endpoint yet?
+round / cost). One config, two backend shapes: keep `backend.name: openai` for any
+OpenAI-compatible endpoint (`uv pip install "eyas[api]"`), or switch it to `vllm` for the
+in-process engine (`uv pip install "eyas[vllm]"`, the recommended default); the config's two
+lines `base_url` and `api_key_env` are the whole connection to your model. No endpoint yet?
 The [guided tour](docs/tutorials/guided-tour.md) executes the complete loop on a built-in
 synthetic task: zero downloads, zero keys, zero GPU.
+
+Working on Eyas itself — a repo checkout with `uv sync`, `--cell` runs, and the `configs/`,
+`examples/` and `scripts/` trees — starts with
+`git clone https://github.com/Davidham3/eyas.git` and is covered in
+[CONTRIBUTING](CONTRIBUTING.md).
 
 ## What every method shares
 

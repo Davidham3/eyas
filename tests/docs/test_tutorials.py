@@ -73,8 +73,9 @@ SKIP: dict[str, str] = {
     "benchmark#5": "reports over outputs/ produced by benchmark#1..4 (GPU tier)",
     "guided-tour#4": "reads the run dirs produced by guided-tour#0/#3 (cross-block state); the multi-run report shape is pinned by tests/engine/test_runtime.py and the pasted table comes from a real stub-server execution",
     "guided-tour#6": "the published-cell address runs real data + real weights (GPU tier); the assembled pets/raw cell is golden-pinned by tests/configs/test_configspec.py",
-    "README#0": "git clone of the public repo https://github.com/Davidham3/eyas.git: needs network, skipped; uv sync is an environment install",
-    "README#1": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/configs/test_configs.py",
+    "README#0": "uv pip install from PyPI: needs network and mutates the environment; the wheel-install contract is exercised by the release preflight, not the docs gate",
+    "README#2": "downloads TextVQA images (5001-question labeled val pool, ~3 parquet shards of ~310 MB) and needs the prepare extra",
+    "README#3": "needs the TextVQA splits built by README#2 plus a user-supplied OpenAI-compatible endpoint; the inline config mirrors the shipped textvqa/opro openai variant, whose backend is golden-pinned by tests/configs/test_configspec.py",
 }
 
 # documented stderr signatures for the FAIL blocks
@@ -90,6 +91,7 @@ FAIL_SIGNATURES: dict[str, str] = {
 # literal rewritten inside the copies (the configs in the tree are never
 # touched).
 RUN_STUB: dict[str, str] = {
+    "README#1": "install smoke test: a heredoc-written zero-data demo_shapes config (URL literal in the block) + one raw evaluation, all against the stub",
     "guided-tour#0": "the tour's opening run: URL literal lives inside configs/tutorial_shapes.yaml, rewritten inside the config copy the block is repointed at",
     "guided-tour#2": "reader-edited config written in-block (literal in the heredoc) + final_eval run + md report, all against the stub",
     "guided-tour#3": "two-seed replication via --set on an existing key (URL literal via the referenced config's copy)",
@@ -257,8 +259,9 @@ def _run_stub_block(block: str, tmp_dir: Path | None = None) -> tuple[int, str, 
             tmp_dir = Path(tempfile.mkdtemp(prefix="eyas-stub-block-"))
         lines = _executables(_rewrite_stub_url(block, base, tmp_dir))
         assert lines, "block has no executable line"
-        # explicit env: the stub key is injected, no real API key is ever passed
-        env = _env(EYAS_DOC_STUB_KEY="stub-key")
+        # explicit env: both documented key variables are pinned to the stub
+        # key, so an inherited real API key can never be sent to the stub
+        env = _env(EYAS_DOC_STUB_KEY="stub-key", EYAS_API_KEY="stub-key")
         proc = subprocess.run(
             "\n".join(lines),
             shell=True,
