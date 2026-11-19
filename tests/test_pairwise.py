@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from test_contract import CompareOnlyConfig, CompareOnlyStrategy, ToyCompare
 
 from eyas.backends.base import (
     ChatRequest,
@@ -23,6 +22,7 @@ from eyas.engine.registry import get as engine_get
 from eyas.engine.registry import registered as engine_registered
 from eyas.engine.strategy import build_run_context
 from eyas.tasks.protocol import IdentityProtocol
+from tests.contract.helpers import CompareOnlyConfig, CompareOnlyStrategy, ToyCompare
 
 
 def test_default_parse_ab_tie() -> None:

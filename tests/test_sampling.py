@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from test_contract import ToyMCQ, _gen_mock
-
 from eyas.backends.base import SamplingConfig
 from eyas.engine.evaluation import AbsoluteEvalModel
 from eyas.engine.sampling import DEFAULT_TIERS, merge_tier, resolve_tier
 from eyas.engine.strategies.ape import ApeConfig, ApeStrategy
 from eyas.engine.strategy import OptimizerLoop, build_run_context
 from eyas.tasks.protocol import IdentityProtocol
+from tests.contract.helpers import ToyMCQ, _gen_mock
 
 
 def test_merge_keeps_deployment_thinking_and_seed():

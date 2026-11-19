@@ -17,7 +17,6 @@ from dataclasses import fields, is_dataclass
 from typing import Any
 
 import pytest
-from test_contract import _LABELS, ToyMCQ, _gen_mock, _mock
 
 from eyas.backends.base import (
     ChatRequest,
@@ -49,6 +48,7 @@ from eyas.engine.strategy import OptimizerLoop, _state_prompts, build_run_contex
 from eyas.logging import _reset
 from eyas.registry import register_task
 from eyas.tasks.protocol import IdentityProtocol
+from tests.contract.helpers import _LABELS, ToyMCQ, _gen_mock, _mock
 
 _CFG = HillClimbConfig(rounds=3, keep_size=2, per_parent=3)
 

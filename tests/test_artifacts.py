@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 
 import pytest
-from test_contract import ToyMCQ, _gen_mock
 
 from eyas.engine.artifacts import ArtifactStore
 from eyas.engine.capability import ABSOLUTE_EVAL, CapSpec
@@ -15,6 +14,7 @@ from eyas.engine.strategies.ape import ApeConfig, ApeStrategy
 from eyas.engine.strategies.evoprompt import EvopromptConfig, EvopromptStrategy
 from eyas.engine.strategy import Strategy, build_run_context
 from eyas.tasks.protocol import IdentityProtocol
+from tests.contract.helpers import ToyMCQ, _gen_mock
 
 
 def test_artifact_is_content_addressed():

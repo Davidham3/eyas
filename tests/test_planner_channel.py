@@ -27,7 +27,6 @@ from typing import Any, ClassVar
 
 import pytest
 from conftest import full_split_plan
-from test_contract import ToyMCQ
 from test_judge_cost import CostToyMCQ
 
 from eyas.backends.base import (
@@ -54,6 +53,7 @@ from eyas.engine.strategies.raw import RawConfig, RawStrategy
 from eyas.engine.strategy import Decision, EvalView, OptimizerLoop, build_run_context
 from eyas.judges.mcq_judge import McqLLMJudge
 from eyas.tasks.protocol import IdentityProtocol
+from tests.contract.helpers import ToyMCQ
 
 
 class _Recorder(InferenceBackend):
