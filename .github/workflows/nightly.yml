@@ -1,0 +1,49 @@
+name: nightly
+
+# GPU slow tier: real-engine smoke + renderer golden anchors. Opt-in via the
+# repository variable EYAS_NIGHTLY_ENABLED ('true') so forks / repos without a
+# GPU runner never queue a job that cannot be picked up. Env prerequisites
+# (repository variables): renderer goldens need EYAS_QWEN35_MODEL_PATH; the
+# vllm live smokes need EYAS_SLOW_MODEL + EYAS_SLOW_IMAGE; the openai live
+# variant additionally needs EYAS_SLOW_OPENAI_BASE_URL + EYAS_SLOW_MODEL_NAME.
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  slow:
+    if: vars.EYAS_NIGHTLY_ENABLED == 'true'
+    runs-on: [self-hosted, linux, gpu]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.11.21"  # pinned for reproducibility (matches the local uv that produced uv.lock)
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sync with the vllm extra (real in-process engine)
+        run: uv sync --extra vllm
+
+      # The CLI -m slow overrides the default addopts "-m 'not slow'".
+      # Renderer goldens need a local Qwen3.5 model dir (chat_template.jinja)
+      # via EYAS_QWEN35_MODEL_PATH; the live-backend smokes need EYAS_SLOW_MODEL
+      # (a model dir) + EYAS_SLOW_IMAGE, and the openai variant additionally
+      # needs the EYAS_SLOW_OPENAI_BASE_URL + EYAS_SLOW_MODEL_NAME pair (the
+      # test skips on an empty base URL but reads the model name once it runs).
+      # Unset variables expand to empty strings, so each tier skips until its
+      # prerequisites are configured on the repository.
+      - name: pytest (slow tier, GPU)
+        env:
+          EYAS_QWEN35_MODEL_PATH: ${{ vars.EYAS_QWEN35_MODEL_PATH }}
+          EYAS_SLOW_MODEL: ${{ vars.EYAS_SLOW_MODEL }}
+          EYAS_SLOW_IMAGE: ${{ vars.EYAS_SLOW_IMAGE }}
+          EYAS_SLOW_OPENAI_BASE_URL: ${{ vars.EYAS_SLOW_OPENAI_BASE_URL }}
+          EYAS_SLOW_MODEL_NAME: ${{ vars.EYAS_SLOW_MODEL_NAME }}
+        run: uv run pytest -m slow

@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a capability, method, backend, or task type
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Eyas extension points are registries — many requests need no framework
+        change at all: a new strategy, task, backend, judge, budget or pairwise
+        judge can live entirely out of tree (see `examples/` and the tutorials).
+  - type: textarea
+    id: need
+    attributes:
+      label: The need
+      description: What you are trying to do, where the framework stops today, and what you would like to say instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which layer
+      multiple: true
+      options:
+        - A strategy (optimization method)
+        - A task / dataset adapter
+        - A backend (inference engine / endpoint)
+        - A judge / eval model / budget policy
+        - Runtime (caching, checkpointing, scheduling, reporting)
+        - Docs / tutorials / examples
+        - Packaging / installation
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: Sketch (optional)
+      description: Config shape or interface you imagine, a strawman YAML, or the paper a new method should track.

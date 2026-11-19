@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work as documented
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Everything below helps us reproduce without a round-trip.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected vs. what actually happened. Error text goes here verbatim — full tracebacks, no summaries.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: |
+        The shortest path from a clean checkout to the failure: the exact command,
+        the run config (YAML, or the `--set` overrides you added), and — for a real
+        run — which backend extra you installed (`vllm` / `api`).
+        A failing config on the zero-GPU demo task or the scripted mock backend is
+        the ideal report: it reproduces on any machine.
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: "Paste the output of `uv run eyas list` plus OS, Python version (`python -V`), and the inference extra installed."
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Run artifacts (optional but gold)
+      description: |
+        If a run misbehaved, attach (or paste the tail of) the run directory's
+        `framework.log`, `status.json`, and the last lines of `trace.jsonl`.
+        The run directory is the checkpoint — it usually contains the whole story.
