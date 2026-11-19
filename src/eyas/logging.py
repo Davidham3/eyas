@@ -14,16 +14,20 @@ Conventions:
   writer thread, never the caller (no handler may run on the caller's thread: the
   same stall degrades to log loss, with a drop report after recovery — log loss is
   never silent; sink exceptions are counted and surfaced in the same report);
-- The console handler holds a dynamic stdout proxy (each write resolves the current
-  ``sys.stdout``, so a pytest capsys buffer swap is followed automatically); the
+- The console handler holds a dynamic **stderr** proxy (each write resolves the
+  current ``sys.stderr``, so a pytest capsys buffer swap is followed automatically)
+  — logs are diagnostics, and stdout stays reserved for command products; the
   FileHandler writes run-dir framework.log (full format: timestamp + level + logger
   name, distinct from the console's bare message lines);
 - Before setup, INFO level is silent (the "eyas" logger has no handlers, root defaults
   to WARNING) — zero noise for library users, and contract tests exercising components
   directly do not flood the output;
-- The watchdog (diagnostics before os._exit, must be emitted without depending on
-  logging initialization) and CLI command output (command results, not logs) keep
-  using print, not this module.
+- Stream rule for the whole package: **stdout carries command products only**
+  (result tables, final summaries, config params to paste); every diagnostic —
+  the watchdog's pre-``os._exit`` output (must emit without depending on logging
+  initialization), one-shot prepare warnings/progress, CLI errors — goes to
+  stderr. CLI product prints and prepare's own prints keep using print, not
+  this module.
 """
 
 from __future__ import annotations
@@ -65,22 +69,22 @@ _sink_lock = threading.Lock()
 _sink_errors = 0
 
 
-class _CurrentStdout:
-    """Dynamic proxy for the current sys.stdout — the handler is constructed once and
+class _CurrentStderr:
+    """Dynamic proxy for the current sys.stderr — the handler is constructed once and
     follows capsys buffer swaps automatically."""
 
     def write(self, s: str) -> int:
-        return sys.stdout.write(s)
+        return sys.stderr.write(s)
 
     def flush(self) -> None:
-        sys.stdout.flush()
+        sys.stderr.flush()
 
 
 class _EnqueueHandler(logging.Handler):
     """Caller-side handler: bounded-queue enqueue, drops and counts when full.
 
     emit never blocks, never raises — when the write path (a blocked FileHandler /
-    a full stdout pipe) is wedged, the caller at worst loses logs, never control;
+    a full stderr pipe) is wedged, the caller at worst loses logs, never control;
     the drop count is exposed via dropped_count(), and the writer thread's drop report
     restores visibility after recovery.
 
@@ -239,7 +243,7 @@ def setup(*, file: Path | None = None, level: int = logging.INFO) -> None:
         logger.addHandler(_enqueue)
         with _sink_lock:
             if _console_handler is None:
-                _console_handler = logging.StreamHandler(_CurrentStdout())
+                _console_handler = logging.StreamHandler(_CurrentStderr())
                 _console_handler.setFormatter(logging.Formatter("%(message)s"))
                 _sinks.append(_console_handler)
         _listener = threading.Thread(

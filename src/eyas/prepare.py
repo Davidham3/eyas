@@ -115,6 +115,13 @@ CUB_TEXT_PREFIX = "A photo of a "
 Loader = tuple[dict[str, list[dict[str, Any]]], Callable[[str, list[int]], list[Any]]]
 
 
+def _diag(*args: Any, **kw: Any) -> None:
+    """Diagnostics (source-fallback warnings, scan progress) go to stderr:
+    stdout carries only the final summary + params block the user pastes
+    (the package-wide "stdout = products, stderr = diagnostics" rule)."""
+    print(*args, file=sys.stderr, **kw)
+
+
 def _use_hf_mirror() -> None:
     os.environ["HF_ENDPOINT"] = HF_MIRROR
     try:
@@ -304,7 +311,7 @@ def _load_pets_modelscope() -> Loader:
         pools[split] = items
 
     if all(str(it["label"]).isdigit() for pool in pools.values() for it in pool):
-        print(
+        _diag(
             "⚠ ModelScope OxfordPets only provides integer labels (no breed-name mapping), "
             "yielding a degraded benchmark (integer-string choices); prefer --source hf-mirror"
         )
@@ -381,7 +388,7 @@ def prepare_pets(
             pools, decode = _load_pets(src)
             break
         except Exception as exc:  # noqa: BLE001 - the fallback chain must swallow all load errors
-            print(f"⚠ pets source {src} failed: {exc}")
+            _diag(f"⚠ pets source {src} failed: {exc}")
             last = exc
     else:
         raise RuntimeError(
@@ -477,7 +484,7 @@ def _load_sroie(source: str) -> Loader:
                 {"split": split, "index": idx, "id": stem, "entities": [entity] if entity else []}
             )
     if skipped:
-        print(f"⚠ sroie dirty rows (mismatched words/labels lengths) skipped: {skipped}")
+        _diag(f"⚠ sroie dirty rows (mismatched words/labels lengths) skipped: {skipped}")
 
     def decode(split: str, indices: list[int]):
         subset = dsd[split].select(indices)
@@ -502,7 +509,7 @@ def prepare_sroie(
             pool, decode = _load_sroie(src)
             break
         except Exception as exc:  # noqa: BLE001
-            print(f"⚠ sroie source {src} failed: {exc}")
+            _diag(f"⚠ sroie source {src} failed: {exc}")
             last = exc
     else:
         raise RuntimeError(
@@ -631,7 +638,7 @@ def prepare_cub(
             rows = _stream_cub(src)
             break
         except Exception as exc:  # noqa: BLE001 - the fallback chain must swallow all load errors
-            print(f"⚠ cub source {src} failed: {exc}")
+            _diag(f"⚠ cub source {src} failed: {exc}")
             last = exc
     else:
         raise RuntimeError(
@@ -651,7 +658,7 @@ def prepare_cub(
         for _, species, image in rows:
             scanned += 1
             if scanned % 2000 == 0:
-                print(f"   cub scan {scanned} rows / {len(buffered)} species ...")
+                _diag(f"   cub scan {scanned} rows / {len(buffered)} species ...")
             files = buffered.setdefault(species, [])
             if len(files) >= imgs_per_species:
                 continue
@@ -813,7 +820,7 @@ def prepare_textvqa(
             pool, val = _load_textvqa(src)
             break
         except Exception as exc:  # noqa: BLE001
-            print(f"⚠ textvqa source {src} failed: {exc}")
+            _diag(f"⚠ textvqa source {src} failed: {exc}")
             last = exc
     else:
         raise RuntimeError(
@@ -999,7 +1006,7 @@ def prepare_gsm8k(
             train_pool, test_pool = _load_gsm8k(src)
             break
         except Exception as exc:  # noqa: BLE001 - the fallback chain must swallow all load errors
-            print(f"⚠ gsm8k source {src} failed: {exc}")
+            _diag(f"⚠ gsm8k source {src} failed: {exc}")
             last = exc
     else:
         raise RuntimeError(
@@ -1281,7 +1288,7 @@ def prepare_nextqa(
     rows = load_nextqa_rows(annotations_dir=annotations)
     available = [row for row in rows if _nextqa_cell(row, "video") in index]
     if len(available) < len(rows):
-        print(
+        _diag(
             f"⚠ {len(rows) - len(available)} NExT-QA annotation rows reference clips absent "
             f"from {videos}; sampling over the {len(index)} clips the pack holds"
         )

@@ -206,7 +206,7 @@ def test_prepare_nextqa_samples_only_clips_the_pack_holds(tmp_path, capsys):
         rows = json.loads((tmp_path / "out" / "data" / f"{split}.json").read_text())
         served |= {row["video"] for row in rows}
     assert served <= {f"v{i}.mp4" for i in range(4)}
-    assert "reference clips absent" in capsys.readouterr().out
+    assert "reference clips absent" in capsys.readouterr().err
 
 
 def test_nextqa_dataset_requires_a_local_clip_pack(capsys):

@@ -96,18 +96,18 @@ def test_drops_counted_and_reported_after_recovery(tmp_path, monkeypatch):
 
 
 class TestSetup:
-    def test_console_rebinds_current_stdout(self, capsys):
+    def test_console_rebinds_current_stderr(self, capsys):
         setup()
         get_logger("demo").info("hello %s", "world")
         assert drain(5)
-        assert "hello world" in capsys.readouterr().out
+        assert "hello world" in capsys.readouterr().err
 
     def test_setup_idempotent_no_duplicate_console(self, capsys):
         setup()
         setup()
         get_logger("demo").info("once")
         assert drain(5)
-        assert capsys.readouterr().out.count("once") == 1
+        assert capsys.readouterr().err.count("once") == 1
 
     def test_file_handler_writes_full_format(self, tmp_path, capsys):
         log = tmp_path / "framework.log"
@@ -117,7 +117,7 @@ class TestSetup:
         text = log.read_text(encoding="utf-8")
         assert "INFO eyas.backends.demo: file line" in text
         # console side is still the bare message line (timestamp/level go to the file only)
-        assert capsys.readouterr().out == "file line\n"
+        assert capsys.readouterr().err == "file line\n"
 
     def test_same_file_repeated_setup_keeps_single_handler(self, tmp_path):
         log = tmp_path / "framework.log"
@@ -137,7 +137,7 @@ class TestSetup:
 
     def test_unconfigured_info_is_silent(self, capsys):
         get_logger("quiet").info("dropped")
-        assert capsys.readouterr().out == ""
+        assert capsys.readouterr().err == ""
 
 
 def test_priority_channel_survives_a_full_droppable_queue(tmp_path, monkeypatch):

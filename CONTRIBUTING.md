@@ -66,6 +66,11 @@ uv run mypy src                  # type check
   counts as 0.0).
 - Keep IO and heavy dependencies out of `core/`-style pure modules; inference and
   persistence happen only in backends / evaluation / runtime.
+- Stream rule: **stdout carries command products only** (result tables, final
+  summaries, paste-ready params); every diagnostic — logs, warnings, progress —
+  goes to stderr. Library code logs through `eyas.logging` (whose console handler
+  writes stderr); one-shot scripts like `prepare` use `print(..., file=sys.stderr)`
+  directly — they do not initialize the logging stack.
 
 ## Commit style
 
