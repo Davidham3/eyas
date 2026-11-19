@@ -1,12 +1,12 @@
 name: docs
 
-# Deploy the Sphinx (MyST-NB) site to GitHub Pages on every master push that
+# Deploy the Sphinx (MyST-NB) site to GitHub Pages on every main push that
 # touches the docs tree (conf.py lives inside it). Link/toctree integrity is
 # gated by the ci workflow (tests/docs/test_docs_links.py + sphinx-build -W); this
 # workflow only publishes. Notebook execution is off — the build needs no GPU.
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - "docs/**"
       - "pyproject.toml"
