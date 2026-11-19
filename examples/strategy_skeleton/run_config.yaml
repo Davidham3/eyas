@@ -1,0 +1,49 @@
+# The same method against a real OpenAI-compatible endpoint: fill in the three
+# backend.params placeholders, export the key, and run from the repo root.
+#
+#   export EYAS_API_KEY=...
+#   uv run eyas run --config examples/strategy_skeleton/run_config.yaml
+#
+# The task is a placeholder too: keep demo_shapes to put the smallest possible
+# load on a new endpoint (12 synthetic images), then switch it to your own task
+# and dataset.
+
+run:
+  name: skeleton_random_search_real
+  seed: 42
+  final_eval:
+    split: test   # report on the held-out split; the loop still selects on train
+
+plugins: [examples.strategy_skeleton.my_method]
+
+task:
+  name: demo_shapes
+  params: {}
+
+protocol:
+  name: identity
+
+backend:
+  name: openai
+  params:
+    base_url: https://your-openai-compatible-endpoint/v1/
+    model: your-model
+    api_key_env: EYAS_API_KEY   # the key is read from this environment variable
+    max_inflight: 16            # client-side concurrency window
+  sampling:
+    thinking: false
+
+eval_model:
+  name: absolute
+
+budget:
+  name: flat
+
+strategy:
+  name: random_search
+  params:
+    neighborhood_size: 3
+    edit_probability: 0.3
+    seed: 0
+    max_rounds: 3
+  seeds: ["What color is the square? Answer with one color name."]

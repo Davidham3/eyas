@@ -1,0 +1,49 @@
+# Plugin-backend demo: a THIRD-PARTY backend, zero GPU, zero external data.
+#
+# What this config proves: the `plugins` key below imports a module that lives
+# outside the framework package, its @register_backend("echo_demo") decorator
+# makes the name resolvable, and the run assembles + completes with that
+# backend — exactly what the built-in backends obey, from the outside.
+#
+# The echo backend answers with the question it was asked (the last user turn),
+# so the metric carries no algorithmic meaning — it validates the registration
+# and the end-to-end path only:
+# config -> plugins import -> assembly -> OptimizerLoop -> result.json.
+#
+# Run from the repo root:
+#   uv run eyas run --config examples/plugin_backend/demo_config.yaml --output-dir .eyas-demo/plugin-echo
+# then read the run dir:  uv run eyas status .eyas-demo/plugin-echo
+# (any scratch --output-dir works; delete it afterwards)
+
+run:
+  name: plugin_echo_demo
+  seed: 42
+
+# Registration route for a backend that lives outside the framework package:
+# the plugins key imports this module — dotted paths resolve against the CWD,
+# which is why every command here runs from the repo root. A packaged plugin
+# instead declares [project.entry-points."eyas.plugins"] and needs no line here
+# (see README.md).
+plugins: [examples.plugin_backend.echo_backend]
+
+task:
+  name: demo_shapes   # built-in zero-data task: synthesizes solid-color square PNGs
+  params: {}
+
+protocol:
+  name: identity
+
+backend:
+  name: echo_demo     # @register_backend name in echo_backend.py — third-party
+  params: {}          # EchoBackend takes no constructor args
+
+eval_model:
+  name: absolute      # absolute scores; no judge section is needed for absolute scoring
+
+budget:
+  name: flat
+
+strategy:
+  name: raw           # built-in identity method: the seed prompt is the candidate
+  params: {}
+  seeds: ["What color is the square? Choices: blue, green, red, yellow. Answer with one color name."]

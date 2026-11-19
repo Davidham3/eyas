@@ -1,0 +1,48 @@
+# Scripted demo for the method in this directory: zero GPU, zero external data.
+# The scripted test backend answers "red" to every request, so the metric is a pipeline signal
+# only — it proves config → assembly → OptimizerLoop → result.json, nothing more.
+#
+# Run from the repo root:
+#   PYTHONPATH=src uv run eyas run --config examples/strategy_skeleton/demo_config.yaml
+# then read the run dir:  uv run eyas status <run dir>   (or cat its result.json)
+
+run:
+  name: skeleton_random_search
+  seed: 42
+  # max_steps: 400   # the loop's ceiling on decisions per run; a method that
+  #                  # finishes earlier simply stops (this plan needs ~8 of them)
+
+# Registration route for a method that lives outside the framework package: the
+# plugins key imports this module — dotted paths resolve against the CWD, which
+# is why every command here runs from the repo root — and its
+# @register_strategy decorator is what makes the name below resolvable.
+plugins: [examples.strategy_skeleton.my_method]
+
+task:
+  name: demo_shapes   # built-in zero-data task: synthesizes solid-color square PNGs
+  params: {}
+
+protocol:
+  name: identity
+
+backend:
+  name: mock
+  params:
+    responses: ["red"]
+    cycle: true       # loop the script instead of failing when it runs out
+
+eval_model:
+  name: absolute      # absolute scores — what CapSpec.requires_eval asks for
+
+budget:
+  name: flat
+
+strategy:
+  name: random_search   # @register_strategy name in my_method.py
+  params:               # bound to RandomSearchConfig by keyword
+    neighborhood_size: 3
+    edit_probability: 0.3
+    seed: 0
+    max_rounds: 3
+  # seeds: starting prompts; omitted = the task's default_prompt
+  seeds: ["What color is the square? Answer with one color name."]
