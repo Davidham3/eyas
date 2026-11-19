@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://davidham3.github.io/eyas/_static/eyas.svg" alt="Eyas logo" width="120">
+</p>
+
 # Eyas
 
 **Train sharp-eyed prompts for multimodal models.**
