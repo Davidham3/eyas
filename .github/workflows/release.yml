@@ -1,18 +1,21 @@
 name: release
 
-# Tag-driven PyPI publish via trusted publishing (OIDC) — no API token secret.
-# Requires the PyPI project to trust this repo's "release" environment.
+# Tag-driven PyPI publish: build once, rehearse the same dist on TestPyPI,
+# smoke-test the published wheel on three OSes, wait for the `release`
+# environment approval, then publish to PyPI and attach the same artifacts to
+# a draft GitHub Release. Trusted publishing (OIDC) only — no API-token secret.
 on:
   push:
     tags: ["v*"]
 
+# A release must never be cancelled mid-flight by a newer run, so there is
+# deliberately no cancel-in-progress switch here.
+concurrency:
+  group: release-${{ github.ref }}
+
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -26,8 +29,139 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Sync core deps (no torch / no GPU)
+        run: uv sync
+
+      - name: Version gate
+        # The tag (minus one leading v) must equal [project].version verbatim,
+        # so a stale or mistyped tag dies before anything is built or uploaded.
+        run: uv run python scripts/check_tag_version.py "${GITHUB_REF_NAME}"
+
       - name: Build sdist and wheel
         run: uv build
 
-      - name: Publish to PyPI (trusted publishing)
+      - name: Check distribution metadata
+        run: uvx twine check dist/*
+
+      - name: Upload distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+          if-no-files-found: error
+
+  testpypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/eyas
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Publish to TestPyPI (rehearsal)
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          # A rehearsed version may already exist from an earlier attempt.
+          skip-existing: true
+
+  smoke:
+    needs: testpypi
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install the published wheel from TestPyPI
+        shell: bash
+        run: |
+          pip install \
+            --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            "eyas[api]==${GITHUB_REF_NAME#v}"
+
+      - name: Import and CLI smoke
+        run: |
+          python -c "import eyas"
+          eyas --help
+
+  pypi:
+    needs: smoke
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+      url: https://pypi.org/p/eyas
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Publish to PyPI (approved release)
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Derive release version and channel
+        id: meta
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          if [[ "${GITHUB_REF_NAME}" =~ (a|b|rc)[0-9]+ ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create draft GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          body: |
+            ## Install
+
+            ```bash
+            uv pip install "eyas[api]==${{ steps.meta.outputs.version }}"
+            ```
+
+            Full changelog: https://github.com/Davidham3/eyas/blob/main/CHANGELOG.md
+
+            <!-- Add release notes here. -->
