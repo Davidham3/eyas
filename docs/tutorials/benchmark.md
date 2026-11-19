@@ -4,6 +4,12 @@
 
 The full study design, the result tables and the conclusions live in the [quickstart benchmark design note](../07-quickstart-benchmark.md). This tutorial is the hands-on path through it.
 
+**Developer / repository-checkout path.** The commands below use the repository's `configs/spec`
+cell tree and `scripts/` helpers, which are not shipped in the wheel. pip users should follow
+the inline-YAML tutorials ([Getting started](getting-started.md), [Your first
+optimization](first-optimization.md)); reproducing the published benchmark from an installed
+wheel is not a supported path.
+
 ## What is being reproduced
 
 | Dataset | Task | train / test | Metric |
@@ -20,11 +26,12 @@ A note on data: every dataset below is downloaded at prepare time from its upstr
 ## Step 1 — install and prepare data
 
 ```bash
-uv sync --extra vllm    # or --extra api
+uv pip install "eyas[vllm,prepare]"    # or "eyas[api,prepare]" for remote endpoints
+# from a repository checkout, the equivalent dev install is: uv sync --extra vllm --extra prepare
 # --dataset is required (no default build); the quickstart tables need these four:
-uv run --extra prepare eyas prepare --dataset both --source auto   # pets + sroie
-uv run --extra prepare eyas prepare --dataset cub --source auto
-uv run --extra prepare eyas prepare --dataset textvqa --source auto
+uv run eyas prepare --dataset both --source auto   # pets + sroie
+uv run eyas prepare --dataset cub --source auto
+uv run eyas prepare --dataset textvqa --source auto
 # --dataset all additionally builds gsm8k / nextqa (bench-scale cells, docs/08);
 # nextqa needs the user-supplied clip pack via --nextqa-videos <zip|dir>.
 ```

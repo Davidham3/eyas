@@ -2,6 +2,10 @@
 
 **What you'll learn:** how to check whether a built-in task already covers your data, and how to write, register, wire and test your own task when it does not.
 
+This page assumes Eyas is installed (`uv pip install "eyas[api]"`; see
+[Getting started](getting-started.md)) and that you run `eyas` from the directory holding
+your module and config. No repository checkout is required.
+
 ## Check the built-ins first
 
 Most multimodal evaluation fits one of the shapes the framework already ships:
@@ -42,7 +46,7 @@ The three dataclasses you handle:
 Suppose your data is a directory of JSON manifests: `<data_dir>/<split>.json`, each a JSON array of `{"id", "image", "label"}` with `label` in `{"yes", "no"}` and absolute image paths. That scoring is exact match after light normalization, which `mcq`'s option-list semantics do not cover, so a small custom task is warranted.
 
 ```python
-# my_tasks.py  (repo root; imported via the `plugins` config key)
+# my_tasks.py  (your working directory; imported via the `plugins` config key)
 from __future__ import annotations
 
 import json
@@ -112,7 +116,7 @@ Design notes worth copying:
 
 ## Wire it into a run
 
-The `plugins` config key imports modules relative to the working directory (convention: launch from the repo root) *after* built-ins are registered, making it the third-party path into the registry:
+The `plugins` config key imports modules relative to the working directory you launch `eyas` from (put your module there or on `PYTHONPATH`) *after* built-ins are registered, making it the third-party path into the registry:
 
 ```yaml
 plugins: [my_tasks]
@@ -185,7 +189,7 @@ def test_polarity_roundtrip(tmp_path):
     assert task.score(prediction, sample) == {"accuracy": 1.0}
 ```
 
-For the evaluator-level contract, `tests/support/engine.py` ships `make_evaluator(task, backend, protocol, produces)`, the standard evaluator assembly (planner + absolute scoring) the framework's own task suites ride on. Then point the config's `backend` section at that scripted test backend (its registry name is in the `eyas list` tour of [Getting started](getting-started.md)) and run it: if the loop completes and `result.json` appears, your task composes with evaluation, record caching and the strategy.
+For the evaluator-level contract, a repository checkout ships `tests/support/engine.py`, whose `make_evaluator(task, backend, protocol, produces)` is the standard evaluator assembly (planner + absolute scoring) the framework's own task suites ride on. Then point the config's `backend` section at that scripted test backend (its registry name is in the `uv run eyas list` tour of [Getting started](getting-started.md)) and run it: if the loop completes and `result.json` appears, your task composes with evaluation, record caching and the strategy.
 
 ## Next steps
 

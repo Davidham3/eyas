@@ -8,9 +8,10 @@ with zero GPU, so you can follow along in a terminal right now. Every output
 block below was captured from a real execution of the commands above it
 (timestamps and wall-clock values from that capture), not written by hand.
 
-What this page runs: the built-in `demo_shapes` task, declared in
-[`configs/tutorial_shapes.yaml`](../../configs/tutorial_shapes.yaml). It renders
-solid-color square PNGs in the repo (no dataset, no weights) and asks "what
+What this page runs: the built-in `demo_shapes` task, declared in the
+`tutorial_shapes.yaml` you write in §1 (a repository checkout ships the same file
+as [`configs/tutorial_shapes.yaml`](../../configs/tutorial_shapes.yaml)). It renders
+solid-color square PNGs locally (no dataset, no weights) and asks "what
 color?", against any OpenAI-compatible chat endpoint. This page
 teaches **loop mechanics**: the shape of the artifacts, the live state
 document, and the resume path, all identical in a real run. The numbers are not:
@@ -22,10 +23,12 @@ in-repo stub of the OpenAI API.
 
 ## 1. The materials
 
-One YAML file is the entire experiment definition
-([`configs/tutorial_shapes.yaml`](../../configs/tutorial_shapes.yaml)):
+One YAML file is the entire experiment definition. Save it as
+`tutorial_shapes.yaml` (a repository checkout ships the same file as
+[`configs/tutorial_shapes.yaml`](../../configs/tutorial_shapes.yaml)):
 
-```yaml
+```bash
+cat > tutorial_shapes.yaml <<'YAML'
 run:
   name: tutorial_shapes
   seed: 42
@@ -64,11 +67,12 @@ strategy:
   params:
     base_prompt: "What color is the square? Answer with one color name."
     cot_suffix: "Let's think step by step."
+YAML
 ```
 
 Split into a decision half and an execution half: `run` is run metadata, the
 other sections are components, each resolved through its own decorator
-registry (`eyas list` prints them all), and each section's `params` become the
+registry (`uv run eyas list` prints them all), and each section's `params` become the
 component's constructor kwargs. That structure *is* the framework's
 contract-first design: if a combination is semantically illegal (a
 compare-only method fitted to an accuracy leaderboard), assembly refuses to
@@ -77,7 +81,7 @@ start rather than burning GPU time to discover it.
 ## 2. Start the run
 
 ```bash
-uv run eyas run --config configs/tutorial_shapes.yaml --output-dir outputs/eyas_tour
+uv run eyas run --config tutorial_shapes.yaml --output-dir outputs/eyas_tour
 ```
 
 Console output (captured, verbatim):
@@ -195,7 +199,7 @@ after the loop, the archived best is re-evaluated on `run.final_eval.split` to
 produce the reporting numbers. Natural attempt:
 
 ```bash
-uv run eyas run --config configs/tutorial_shapes.yaml --set run.final_eval.split=val
+uv run eyas run --config tutorial_shapes.yaml --set run.final_eval.split=val
 ```
 
 This **fails on purpose** (the last line of the traceback):
@@ -281,8 +285,8 @@ A single run is weak evidence, so replicate it. `run.seed` is a real, existing
 key, so this time `--set` works:
 
 ```bash
-uv run eyas run --config configs/tutorial_shapes.yaml --output-dir outputs/eyas_tour43 --set run.seed=43
-uv run eyas run --config configs/tutorial_shapes.yaml --output-dir outputs/eyas_tour44 --set run.seed=44
+uv run eyas run --config tutorial_shapes.yaml --output-dir outputs/eyas_tour43 --set run.seed=43
+uv run eyas run --config tutorial_shapes.yaml --output-dir outputs/eyas_tour44 --set run.seed=44
 ```
 
 Three seeds, then aggregate:
@@ -322,8 +326,8 @@ pointed at the *finished* run, which is the identical re-entry path a crashed
 run takes:
 
 ```bash
-uv run eyas run --config configs/tutorial_shapes.yaml --output-dir outputs/eyas_tour_resume
-uv run eyas run --config configs/tutorial_shapes.yaml --resume outputs/eyas_tour_resume
+uv run eyas run --config tutorial_shapes.yaml --output-dir outputs/eyas_tour_resume
+uv run eyas run --config tutorial_shapes.yaml --resume outputs/eyas_tour_resume
 ```
 
 The resume's `Done:` line re-bills the run's own total (`requests=8`) while the
@@ -342,11 +346,15 @@ contract-tested: a run interrupted at round *k* and resumed lands on the same
 
 ## 8. From this file to the published cells
 
-Everything above drove a hand-written file — `configs/tutorial_shapes.yaml` is
-the tour's own teaching artifact. The cells behind the published numbers are
-not files at all: each one is an address in the config spec (`configs/spec/`),
-assembled into the full config at run time. Two commands own that surface, and
-you have met both shapes already.
+**Developer / repository checkout.** This section runs against the repository's
+config-spec tree, which is not shipped in the wheel; pip users can skip it.
+
+Everything above drove a hand-written file — `tutorial_shapes.yaml` is the
+tour's own teaching artifact (shipped as `configs/tutorial_shapes.yaml` in a
+checkout). The cells behind the published numbers are not files at all: each
+one is an address in the config spec (`configs/spec/`), assembled into the full
+config at run time. Two commands own that surface, and you have met both shapes
+already.
 
 *Run the address.* Same `run` command, a `dataset/method` pair in place of
 `--config` (real cells read a real dataset and need a real model, so this
@@ -370,7 +378,7 @@ head -1 tmp/tour_cells/pets_raw.yaml
 ```
 
 The exported cell re-enters §2 unchanged:
-`eyas run --config tmp/tour_cells/pets_raw.yaml`. For an endpoint served over
+`uv run eyas run --config tmp/tour_cells/pets_raw.yaml`. For an endpoint served over
 the OpenAI protocol the address takes a variant —
 `--cell pets/raw --variant openai` — and a whole factorial study expands the
 same spec in one wave (`--spec configs/spec/benchmark.yaml` + `--filter`s) in

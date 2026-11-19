@@ -4,7 +4,7 @@ All notable changes to Eyas are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the version follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-11-04
+## [0.1.0rc1] - 2026-11-19
 
 Initial public release.
 
@@ -45,3 +45,18 @@ Initial public release.
   `docs/07-quickstart-benchmark.md`.
 - Tutorials (`docs/tutorials/`), runnable starter packages (`examples/`), and CI
   running the full gate (ruff / mypy / pytest) on master pushes and every PR.
+
+### Changed
+
+- **Python support widened to 3.12–3.14** (`requires-python = ">=3.12,<3.15"`),
+  with 3.13 and 3.14 classifiers added. Core is covered on 3.12–3.14; the vLLM
+  extra remains verified on 3.12.
+- **pip-first install story**: `uv pip install "eyas[api]"` (or `[vllm]` /
+  `[prepare]`) is the documented path, and the tutorials use inline YAML so an
+  installed wheel needs no repository files. `git clone` + `uv sync` remains the
+  developer path, documented in `CONTRIBUTING.md`.
+- **Tag-driven release pipeline**: pushing a `v*` tag builds the distribution
+  once, rehearses it on TestPyPI, runs a 3-OS × Python 3.12/3.13/3.14
+  install-and-CLI smoke matrix, then waits for a required reviewer before
+  publishing to PyPI and drafting the GitHub Release. No PyPI API tokens:
+  publishing uses OIDC trusted publishing.

@@ -88,13 +88,13 @@ budget:
 strategy:
   name: raw   # evaluate the seed prompt once: the fastest end-to-end check
 YAML
-eyas run --config "$tmp" --output-dir outputs/eyas_smoke
+uv run eyas run --config "$tmp" --output-dir outputs/eyas_smoke
 ```
 
 Build the exact splits the story config points at:
 
 ```bash
-eyas prepare --dataset textvqa
+uv run eyas prepare --dataset textvqa
 ```
 
 Write `quickstart_textvqa_opro.yaml` — the experiment is the YAML, and the whole connection to
@@ -142,7 +142,7 @@ strategy:
 Then run it:
 
 ```bash
-eyas run --config quickstart_textvqa_opro.yaml
+uv run eyas run --config quickstart_textvqa_opro.yaml
 ```
 
 Each run writes a self-contained run directory under `outputs/<run.name>/<timestamp>` by default,

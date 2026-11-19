@@ -2,12 +2,13 @@
 
 **What you'll learn:** every section of a real run config, what the strategy and the managed loop each do per round, and how two methods share one task and one backend.
 
-[Getting started](getting-started.md) ran the docs' flagship story with one config: the TextVQA × OPRO profile, assembled from [`configs/spec`](../../configs/spec) as the `textvqa/opro` cell's openai variant. Small enough to read whole, real enough to be the file behind published numbers, and the best place to see the anatomy of an Eyas run. Want the file itself? `uv run eyas gen-configs --cell textvqa/opro --variant openai` writes it (gitignored, with a GENERATED header) — the spec stays the source.
+[Getting started](getting-started.md) ran the docs' flagship story with one config: the TextVQA × OPRO profile, printed there in inline form as `quickstart_textvqa_opro.yaml`. Small enough to read whole, real enough to be the file behind published numbers, and the best place to see the anatomy of an Eyas run. (Repository checkouts can regenerate the same config from [`configs/spec`](../../configs/spec) with `uv run eyas gen-configs --cell textvqa/opro --variant openai` — a developer path; the spec stays the source.)
 
 ## The config, piece by piece
 
 ```yaml
-# GENERATED from configs/spec — do not edit (eyas gen-configs --cell textvqa/opro --variant openai)
+# The textvqa/opro openai cell in inline form. Repository checkouts export the same file:
+#   uv run eyas gen-configs --cell textvqa/opro --variant openai
 run:
   name: quickstart_textvqa_opro_openai
   seed: 42
@@ -46,7 +47,7 @@ strategy:
     rounds: 4
 ```
 
-Every section is a component resolved through a decorator registry (`eyas list` prints them all), and each section's `params` mapping is the component's constructor kwargs. Three sections are required (`task` / `backend` / `strategy`); the rest are companions with sensible defaults. Walk the pieces in the order the loop feels them (task, backend, strategy, budget), then the protocol pair.
+Every section is a component resolved through a decorator registry (`uv run eyas list` prints them all), and each section's `params` mapping is the component's constructor kwargs. Three sections are required (`task` / `backend` / `strategy`); the rest are companions with sensible defaults. Walk the pieces in the order the loop feels them (task, backend, strategy, budget), then the protocol pair.
 
 ### `task` — what "good" means
 
@@ -72,21 +73,26 @@ The `openai` backend is a plain HTTP client for any server exposing `/v1/chat/co
 - `protocol: identity` means each sample is asked once, as-is; other protocols can derive multiple variants per sample (the task's `build_request` sees the variant id).
 - `eval_model: absolute` scores each prediction against the task's rules (accuracy, `field_acc`, ...). `compare` is the pairwise sibling: it asks which of two candidates is better, optionally through a pluggable `pairwise_judge`. Both are first-class: a strategy declares which semantics it requires, and `validate_assembly` rejects mismatched combinations at startup.
 
-The story runs baseline first, then the search. Same endpoint, same splits, one config swap:
+The story runs baseline first, then the search. Same endpoint, same splits, one strategy
+swap (the baseline clears OPRO's `params`; `raw` takes none):
 
 ```bash
-uv run eyas run --cell textvqa/raw --variant openai
-uv run eyas run --cell textvqa/opro --variant openai
+uv run eyas run --config quickstart_textvqa_opro.yaml --set strategy.name=raw --set strategy.params={}
+uv run eyas run --config quickstart_textvqa_opro.yaml
 ```
 
 ## A real search loop: hill climbing
 
-Same task, same data, same endpoint: take the story config and swap only the strategy section (run it from a checkout that has the quickstart data built and an endpoint wired, per [Getting started](getting-started.md)):
+Same task, same data, same endpoint: copy the story config and swap only the strategy
+section (with the quickstart data built and an endpoint wired, per
+[Getting started](getting-started.md)):
 
 ```bash
-uv run eyas gen-configs --cell textvqa/opro --variant openai
-cp configs/generated/textvqa_opro_openai.yaml your_hill_climb.yaml
+cp quickstart_textvqa_opro.yaml your_hill_climb.yaml
 ```
+
+Repository checkouts can instead start from the generated cell:
+`uv run eyas gen-configs --cell textvqa/opro --variant openai` (developer path).
 
 Set `run.name: my_hill_climb` (the default output directory follows that name) and replace the `strategy:` block with one that searches without an optimizer model:
 
@@ -103,7 +109,7 @@ strategy:
 uv run eyas run --config your_hill_climb.yaml
 ```
 
-`hill_climb` is deliberately small (`src/eyas/engine/strategies/hill_climb.py`) and is the template the framework's contract tests ride on. Its proposer is a fixed edit menu, so it spends zero optimizer-side LLM requests. Conceptually, each `step`:
+`hill_climb` is deliberately small (`src/eyas/engine/strategies/hill_climb.py` in a repository checkout) and is the template the framework's contract tests ride on. Its proposer is a fixed edit menu, so it spends zero optimizer-side LLM requests. Conceptually, each `step`:
 
 1. **Evaluate anything unseen.** If candidates in state have no scores yet, return `Decision("evaluate", prompts=...)`: the loop does the scoring.
 2. **Rank by score.** The read-only `EvalView` answers "evaluated?" and "score?" from the archive; the strategy never mutates evaluation results.

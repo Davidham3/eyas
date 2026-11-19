@@ -8,28 +8,26 @@ Large multimodal models are prompt-sensitive: the wording of an instruction can 
 
 ## 1. Install
 
-Eyas targets **Python 3.12** and is managed with [uv](https://docs.astral.sh/uv/).
+Eyas requires **Python: core 3.12–3.14; vLLM extra verified on 3.12**. Install it into your
+environment with [uv](https://docs.astral.sh/uv/) (`pip install` works too):
 
 ```bash
-git clone https://github.com/Davidham3/eyas.git
-cd eyas
-uv sync          # core: pyyaml only, installs in seconds, no torch
+uv pip install "eyas[api,prepare]"   # the story path: HTTP client + dataset prep
 ```
 
 The story on this page talks to an OpenAI-compatible endpoint and builds its data with
-`eyas prepare`, so add both extras (`uv sync --extra api --extra prepare`). To instead serve
-the model in-process:
+`uv run eyas prepare`, so it needs both extras. Extras compose; to instead serve the model
+in-process:
 
-| Extra | What you get | Notes |
+| Install | What you get | Notes |
 | --- | --- | --- |
-| `uv sync --extra vllm` | In-process vLLM engine | Recommended default; brings its own torch/transformers |
-| `uv sync --extra api` | OpenAI-compatible HTTP client | Lightest option; rendering happens server-side |
-| `uv sync --extra prepare` | `eyas prepare` dataset download/convert | Needed once per dataset; heavy reader stack (datasets, pyarrow) |
+| `uv pip install "eyas[vllm]"` | In-process vLLM engine | Recommended default; brings its own torch/transformers |
+| `uv pip install "eyas[api]"` | OpenAI-compatible HTTP client | Lightest option; rendering happens server-side |
+| `uv pip install "eyas[prepare]"` | `eyas prepare` dataset download/convert | Needed once per dataset; heavy reader stack (datasets, pyarrow) |
 
-These commands carry the `uv run` prefix because this page walks a checkout of the repo.
-Install the CLI instead (`uv tool install ".[api]"` from this checkout, or once published:
-`uv tool install "eyas[api]"`) and every command below works with plain `eyas` in place of
-`uv run eyas`.
+Every command below uses that `eyas` console script. Working on Eyas itself — editing source,
+running `--cell` benchmark cells, or reading `configs/` and `examples/` — starts from a git
+checkout with `uv sync`; see [CONTRIBUTING](https://github.com/Davidham3/eyas/blob/main/CONTRIBUTING.md).
 
 ## 2. One command to data
 
@@ -43,15 +41,14 @@ Honest size note: this streams the labeled validation split of `lmms-lab/TextVQA
 
 ## 3. The config — the whole secret is two lines
 
-```yaml
-# GENERATED from configs/spec — do not edit (eyas gen-configs --cell textvqa/opro
-# --variant openai). The cell identity: TextVQA x OPRO (rounds=4) on an
-# OpenAI-compatible endpoint (the docs story profile: the backend section is
-# replaced wholesale, the rest is the textvqa/opro cell verbatim).
-# base_url/model are docs-canonical placeholders: point them at your endpoint via
-# --set backend.params.base_url=... --set backend.params.model=... (api key via
-# the env var named in api_key_env).
+Save this as `quickstart_textvqa_opro.yaml`. It is the story cell (TextVQA × OPRO, rounds=4)
+in inline form; a repository checkout can regenerate the same file from `configs/spec` with
+`uv run eyas gen-configs --cell textvqa/opro --variant openai` (developer path — the spec stays the
+source). `base_url`/`model` are placeholders: point them at your endpoint via
+`--set backend.params.base_url=... --set backend.params.model=...` (API key via the
+environment variable named in `api_key_env`).
 
+```yaml
 run:
   name: quickstart_textvqa_opro_openai
   seed: 42
@@ -98,16 +95,18 @@ Everything outside the `backend` section is the experiment setup, dissected line
 
 ## 4. Run the story
 
-Baseline first: `raw` scores the seed prompt once, so you know what you started from. Same endpoint, same splits, one config swap:
+Baseline first: `raw` scores the seed prompt once, so you know what you started from. Same
+endpoint, same splits, one strategy swap (`--set strategy.params={}` clears OPRO's `rounds`
+knob, which `raw` does not take):
 
 ```bash
-uv run eyas run --cell textvqa/raw --variant openai
+uv run eyas run --config quickstart_textvqa_opro.yaml --set strategy.name=raw --set strategy.params={}
 ```
 
 Then the optimization:
 
 ```bash
-uv run eyas run --cell textvqa/opro --variant openai
+uv run eyas run --config quickstart_textvqa_opro.yaml
 ```
 
 Each run writes a self-contained run directory under `outputs/<run.name>/<timestamp>/` (`result.json`, `checkpoint.json`, `status.json`, `framework.log`).

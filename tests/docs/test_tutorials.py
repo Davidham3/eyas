@@ -17,7 +17,10 @@ Execution rules:
   rewrite uv.lock origins as a side effect);
 - blocks that create repo-relative ``outputs/`` dirs: only the run dirs this
   execution newly created are removed afterwards (gitignored anyway, but the
-  suite must not litter).
+  suite must not litter);
+- a block that consumes a file written by an earlier docs block names that
+  block in ``PRELUDE``; both run in one shell, so each test stays
+  self-contained, and scratch files created by the test are removed after it.
 """
 
 from __future__ import annotations
@@ -43,21 +46,22 @@ RUN: dict[str, str] = {
     # guided-tour §8's export half: gen-configs assembles two published cells into
     # the gitignored tmp/ — zero GPU, zero data, executed verbatim (the GENERATED
     # header + why-notes rendering is the live contract)
-    "guided-tour#7": "gen-configs export of pets raw+cot cells to gitignored tmp/ + GENERATED header check",
+    "guided-tour#0": "§1 heredoc writes the tour's tutorial_shapes.yaml in the CWD (the later tour commands consume it)",
+    "guided-tour#8": "gen-configs export of pets raw+cot cells to gitignored tmp/ + GENERATED header check",
 }
 # blocks documented to FAIL: executed too, asserting non-zero exit AND the
 # documented error text — fail-fast promises in the docs are as live as the
 # success paths
 FAIL: dict[str, str] = {
-    "guided-tour#1": "documents --set refusing to invent structure; error text pinned verbatim",
+    "guided-tour#2": "documents --set refusing to invent structure; error text pinned verbatim",
 }
 SKIP: dict[str, str] = {
-    "getting-started#0": "git clone of the public repo https://github.com/Davidham3/eyas.git: needs network, skipped (install walkthrough)",
-    "getting-started#1": "downloads TextVQA images (5001-question labeled val pool, ~3 parquet shards of ~310 MB)",
+    "getting-started#0": "uv pip install from PyPI: needs network and mutates the environment; the wheel-install contract is exercised by the release preflight, not the docs gate",
+    "getting-started#1": "downloads TextVQA images (5001-question labeled val pool, ~3 parquet shards of ~310 MB) and needs the prepare extra",
     "getting-started#2": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/configs/test_configs.py, story numbers from the recorded fresh OpenAI-endpoint run on the page",
     "getting-started#3": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/configs/test_configs.py, story numbers from the recorded fresh OpenAI-endpoint run on the page",
-    "first-optimization#0": "assembled story cells need TextVQA data + user-supplied OpenAI endpoint; the same two commands are classified at getting-started#2/#3 and the config shapes are pinned by tests/configs/test_configs.py",
-    "first-optimization#1": "gen-configs export of the story cell, cp'd to a reader-authored your_hill_climb.yaml (walkthrough placeholder, not a tree artifact)",
+    "first-optimization#0": "the inline story config needs TextVQA data + a user-supplied OpenAI endpoint; the same two commands are classified at getting-started#2/#3 and the config shape is pinned by tests/configs/test_configs.py",
+    "first-optimization#1": "cp of the reader's quickstart_textvqa_opro.yaml to a reader-authored your_hill_climb.yaml (walkthrough placeholder, not a tree artifact)",
     "first-optimization#2": "your_hill_climb.yaml: placeholder authored during the walkthrough (needs endpoint + TextVQA data)",
     "first-optimization#3": "DEBUG/status example over the placeholder your_hill_climb.yaml",
     "custom-method#0": "rs_demo.yaml is reader-authored in the custom-method tutorial; the shipped equivalent (examples/strategy_skeleton) is pytest-gated there",
@@ -65,14 +69,14 @@ SKIP: dict[str, str] = {
     "understanding-results#0": "exp.yaml: placeholder; --resume fidelity is pinned by tests/runs/test_resume.py",
     "understanding-results#1": "exp.yaml: placeholder; --set semantics are pinned by tests/configs/test_runtime_plugins.py",
     "understanding-results#2": "illustrative run-dir path from a user's own outputs/",
-    "benchmark#0": "installs the vllm extra and downloads datasets — CI jobs do this on the GPU tier only",
+    "benchmark#0": "installs the vllm/prepare extras and downloads datasets — CI jobs do this on the GPU tier only",
     "benchmark#1": "quickstart cell needs model weights + dataset (GPU tier)",
     "benchmark#2": "same GPU-tier config as benchmark#1",
     "benchmark#3": "gen-configs export + sweep over GPU-tier cells",
     "benchmark#4": "benchmark-spec sweep: GPU-tier assembled cells + real weights path via --set",
     "benchmark#5": "reports over outputs/ produced by benchmark#1..4 (GPU tier)",
-    "guided-tour#4": "reads the run dirs produced by guided-tour#0/#3 (cross-block state); the multi-run report shape is pinned by tests/engine/test_runtime.py and the pasted table comes from a real stub-server execution",
-    "guided-tour#6": "the published-cell address runs real data + real weights (GPU tier); the assembled pets/raw cell is golden-pinned by tests/configs/test_configspec.py",
+    "guided-tour#5": "reads the run dirs produced by guided-tour#1/#4 (cross-block state); the multi-run report shape is pinned by tests/engine/test_runtime.py and the pasted table comes from a real stub-server execution",
+    "guided-tour#7": "the published-cell address runs real data + real weights (GPU tier); the assembled pets/raw cell is golden-pinned by tests/configs/test_configspec.py",
     "README#0": "uv pip install from PyPI: needs network and mutates the environment; the wheel-install contract is exercised by the release preflight, not the docs gate",
     "README#2": "downloads TextVQA images (5001-question labeled val pool, ~3 parquet shards of ~310 MB) and needs the prepare extra",
     "README#3": "needs the TextVQA splits built by README#2 plus a user-supplied OpenAI-compatible endpoint; the inline config mirrors the shipped textvqa/opro openai variant, whose backend is golden-pinned by tests/configs/test_configspec.py",
@@ -80,7 +84,18 @@ SKIP: dict[str, str] = {
 
 # documented stderr signatures for the FAIL blocks
 FAIL_SIGNATURES: dict[str, str] = {
-    "guided-tour#1": "is not a mapping",
+    "guided-tour#2": "is not a mapping",
+}
+
+# Blocks that need a prior block's side effects to run standalone. The guided
+# tour's §1 heredoc writes tutorial_shapes.yaml; each later command that reads
+# that file is executed with the heredoc prepended, in the same shell, so the
+# block ordering of the page never becomes a hidden test dependency.
+PRELUDE: dict[str, str] = {
+    "guided-tour#1": "guided-tour#0",
+    "guided-tour#2": "guided-tour#0",
+    "guided-tour#4": "guided-tour#0",
+    "guided-tour#6": "guided-tour#0",
 }
 
 # blocks executed against the in-repo stdlib stub of the OpenAI API (Task 1's
@@ -92,10 +107,10 @@ FAIL_SIGNATURES: dict[str, str] = {
 # touched).
 RUN_STUB: dict[str, str] = {
     "README#1": "install smoke test: a heredoc-written zero-data demo_shapes config (URL literal in the block) + one raw evaluation, all against the stub",
-    "guided-tour#0": "the tour's opening run: URL literal lives inside configs/tutorial_shapes.yaml, rewritten inside the config copy the block is repointed at",
-    "guided-tour#2": "reader-edited config written in-block (literal in the heredoc) + final_eval run + md report, all against the stub",
-    "guided-tour#3": "two-seed replication via --set on an existing key (URL literal via the referenced config's copy)",
-    "guided-tour#5": "fresh run then --resume of its finished dir: the resume replays the record store at zero new requests, all against the stub",
+    "guided-tour#1": "the tour's opening run over the §1-written tutorial_shapes.yaml (URL literal rewritten inside the prepended heredoc)",
+    "guided-tour#3": "reader-edited config written in-block (literal in the heredoc) + final_eval run + md report, all against the stub",
+    "guided-tour#4": "two-seed replication via --set on an existing key (prelude writes the config; URL literal rewritten there)",
+    "guided-tour#6": "fresh run then --resume of its finished dir: the resume replays the record store at zero new requests, all against the stub",
 }
 # canonical OpenAI-compatible base URL as printed in the docs; a reader with a
 # real local server on :8000 can run a RUN_STUB block unchanged
@@ -127,6 +142,9 @@ def test_classification_is_complete_and_disjoint():
         for b in maps[i + 1 :]:
             assert not (set(a) & set(b)), f"classification maps overlap: {sorted(set(a) & set(b))}"
     assert set(FAIL) == set(FAIL_SIGNATURES)
+    assert set(PRELUDE) <= keys and set(PRELUDE.values()) <= keys, (
+        "PRELUDE references an unknown block"
+    )
 
 
 def test_stub_url_rewrite_requires_literal_hit():
@@ -312,14 +330,22 @@ def _executables(block: str) -> list[str]:
     return out
 
 
-@pytest.mark.parametrize("key", sorted([*RUN, *FAIL, *RUN_STUB]))
-def test_tutorial_command_runs(key: str, tmp_path):
+def _block_for(key: str) -> str:
     stem, idx = key.split("#")
     path = next(p for p in _DOC_FILES if p.stem == stem)
-    block = _blocks(path)[int(idx)]
+    return _blocks(path)[int(idx)]
+
+
+@pytest.mark.parametrize("key", sorted([*RUN, *FAIL, *RUN_STUB]))
+def test_tutorial_command_runs(key: str, tmp_path):
+    block = _block_for(key)
+    if key in PRELUDE:
+        block = _block_for(PRELUDE[key]) + "\n" + block
 
     outputs_dir = REPO / "outputs"
     before = {p.name for p in outputs_dir.iterdir()} if outputs_dir.is_dir() else set()
+    scratch = REPO / "tutorial_shapes.yaml"
+    scratch_before = scratch.read_bytes() if scratch.exists() else None
 
     try:
         if key in RUN_STUB:
@@ -365,3 +391,9 @@ def test_tutorial_command_runs(key: str, tmp_path):
         if outputs_dir.is_dir():
             for created in {p.name for p in outputs_dir.iterdir()} - before:
                 shutil.rmtree(outputs_dir / created, ignore_errors=True)
+        # the tour's §1 heredoc (and the PRELUDE) writes this scratch config:
+        # put a reader's pre-existing file back byte-for-byte, otherwise remove ours
+        if scratch_before is None:
+            scratch.unlink(missing_ok=True)
+        else:
+            scratch.write_bytes(scratch_before)

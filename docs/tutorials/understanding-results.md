@@ -1,6 +1,6 @@
 # Understanding results
 
-**What you'll learn:** what each file in a run directory means, how the evaluation record store works, how to resume a run, and how to compare runs with `eyas report`.
+**What you'll learn:** what each file in a run directory means, how the evaluation record store works, how to resume a run, and how to compare runs with `uv run eyas report`.
 
 ## The run directory
 
@@ -131,4 +131,4 @@ Every run tallies evaluation and judge-channel requests together in `total_cost.
 
 - [Methods](../methods.md): which method should I use next? Compare the eight shipped strategies and pick one.
 - [Custom tasks](custom-task.md): make the loop score *your* metric.
-- [Custom optimization methods](custom-method.md): add your own strategy to `eyas list`.
+- [Custom optimization methods](custom-method.md): add your own strategy to `uv run eyas list`.

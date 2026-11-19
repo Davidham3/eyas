@@ -24,10 +24,10 @@ Responses are uniform too: `ChatResponse.text` is the clean answer (inline think
 
 ## The two inference backends
 
-| Name | Class | Extras | Typical use |
+| Name | Class | Install | Typical use |
 | --- | --- | --- | --- |
-| `vllm` | In-process vLLM engine | `--extra vllm` | Throughput runs on your own GPU |
-| `openai` | OpenAI-compatible HTTP client | `--extra api` | Any remote endpoint serving `/v1/chat/completions` |
+| `vllm` | In-process vLLM engine | `uv pip install "eyas[vllm]"` | Throughput runs on your own GPU |
+| `openai` | OpenAI-compatible HTTP client | `uv pip install "eyas[api]"` | Any remote endpoint serving `/v1/chat/completions` |
 
 The registry carries one more entry beyond these two: the framework's scripted in-repo test backend, the zero-GPU fixture the whole `tests/` contract suite drives every task and strategy through (it is what the contract-test sections of the custom-task and custom-method tutorials point at).
 
@@ -67,7 +67,7 @@ backend:
 
 `api_key_env` names an environment variable holding the key: the backend fails fast at startup if it is unset, so secrets never land in configs or git. `extra_body` is the escape hatch for provider-specific request fields.
 
-The fastest end-to-end path onto your own endpoint: the `textvqa/raw` cell's `openai` variant — the docs story's single-pass baseline with this backend pre-wired (build its TextVQA splits first with the data script in [Getting started](getting-started.md)): `uv run eyas run --cell textvqa/raw --variant openai`, with per-machine values riding `--set` (`--set backend.params.base_url=...`, `--set backend.params.model=...`). Want a file to keep? `uv run eyas gen-configs --cell textvqa/raw --variant openai` exports it; fill `base_url`/`model` and export the key named in `api_key_env`.
+The fastest end-to-end path onto your own endpoint is the [Getting started](getting-started.md) config: save `quickstart_textvqa_opro.yaml`, keep its `openai` backend section, fill `base_url`/`model`, and export the key named in `api_key_env`. Per-machine values can ride `--set` (`--set backend.params.base_url=...`, `--set backend.params.model=...`). Repository checkouts also have the docs story's single-pass baseline pre-wired as the `textvqa/raw` cell's `openai` variant: `uv run eyas run --cell textvqa/raw --variant openai`, or `uv run eyas gen-configs --cell textvqa/raw --variant openai` to export it as a file (developer path).
 
 ## Sampling semantics: deployment layer vs. algorithm tiers
 
@@ -113,7 +113,7 @@ All knobs below are read from the process environment; unset means the listed de
 
 Two more environment facts, not user knobs: the vllm backend sets `VLLM_USE_FLASHINFER_SAMPLER=0` at engine launch unless you already set it (the flashinfer sampler's JIT fails in CUDA < 12.9 containers), and prefetch worker processes force `CUDA_VISIBLE_DEVICES=""` internally so media decode stays on CPU.
 
-The GPU timing probe helper (`scripts/probe_gpu_timing.py`) reads three variables of its own: `EYAS_PROBE_MODEL_PATH` (model weights directory), `EYAS_PROBE_DATA_DIR` (dataset JSON directory), and `EYAS_PROBE_IMAGES_DIR` (image directory). Their defaults are `/path/to/...` placeholders, so set all three to real paths before running the probe; the framework runtime never reads them.
+The GPU timing probe helper (`scripts/probe_gpu_timing.py` in a repository checkout) reads three variables of its own: `EYAS_PROBE_MODEL_PATH` (model weights directory), `EYAS_PROBE_DATA_DIR` (dataset JSON directory), and `EYAS_PROBE_IMAGES_DIR` (image directory). Their defaults are `/path/to/...` placeholders, so set all three to real paths before running the probe; the framework runtime never reads them.
 
 ## Adding your own backend
 
@@ -144,7 +144,7 @@ Rules of the road:
 - Bump the activity watchdog (`eyas.backends.vllm` shows the pattern) on every engine interaction if you implement long-blocking calls.
 - Verify backend-agnosticism: the same config with `name` swapped should produce statistically identical scores (the published benchmark's backend-consistency experiment is exactly this check).
 
-The worked example is [`examples/plugin_backend/`](../../examples/plugin_backend/README.md): a third-party backend registered via the config `plugins` key (or entry points, for packaged plugins), with a runnable config and a CI test pinning the registration.
+The worked example is [`examples/plugin_backend/`](../../examples/plugin_backend/README.md) in a repository checkout: a third-party backend registered via the config `plugins` key (or entry points, for packaged plugins), with a runnable config and a CI test pinning the registration.
 
 ## Next steps
 

@@ -34,7 +34,7 @@ Two rules keep strategies honest:
 
 ## The reference implementation
 
-The template is [`examples/strategy_skeleton/`](../../examples/strategy_skeleton/): a complete method, its scripted contract test, and the two configs that run it. Copy that directory, replace the symbols its README lists, and you have your own method. It is deliberately small, and its test is the shape the framework's own contract tests ride on. The kit ships its own `random_search` (four knobs: `neighborhood_size` / `edit_probability` / `seed` / `max_rounds`); the inline walkthrough below teaches the shape with its own `my_random` variant, so the two never collide as duplicate registrations in one process. The reference method below is the same `step`, in full spirit:
+The template is [`examples/strategy_skeleton/`](../../examples/strategy_skeleton/) in a repository checkout (see [CONTRIBUTING](https://github.com/Davidham3/eyas/blob/main/CONTRIBUTING.md)): a complete method, its scripted contract test, and the two configs that run it. Copy that directory, replace the symbols its README lists, and you have your own method. The skeleton is deliberately small, and its test is the shape the framework's own contract tests ride on. The kit ships its own `random_search` (four knobs: `neighborhood_size` / `edit_probability` / `seed` / `max_rounds`); the inline walkthrough below is the pip-installable path and teaches the shape with its own `my_random` variant, so the two never collide as duplicate registrations in one process. The reference method below is the same `step`, in full spirit:
 
 ```python
 def step(self, state, view) -> Decision:
@@ -140,7 +140,7 @@ Points that generalize to any strategy:
 
 ## Run it
 
-`rs_demo.yaml` is [`configs/tutorial_shapes.yaml`](../../configs/tutorial_shapes.yaml) with two edits: a `plugins` line on top, and the `strategy` section swapped for your method. The zero-data shapes task keeps the smoke test free of datasets, and the `openai` backend section (base_url / model / api key env: point them at any OpenAI-compatible endpoint, as in [Inference backends](backends.md)) keeps it free of in-process engines:
+`rs_demo.yaml` is the [guided tour](guided-tour.md)'s `tutorial_shapes.yaml` (shipped as `configs/tutorial_shapes.yaml` in a repository checkout) with two edits: a `plugins` line on top, and the `strategy` section swapped for your method. Save it as `rs_demo.yaml` next to `my_strategy.py`. The zero-data shapes task keeps the smoke test free of datasets, and the `openai` backend section (base_url / model / api key env: point them at any OpenAI-compatible endpoint, as in [Inference backends](backends.md)) keeps it free of in-process engines:
 
 ```yaml
 # rs_demo.yaml
@@ -184,12 +184,12 @@ strategy:
 uv run eyas run --config rs_demo.yaml
 ```
 
-`eyas list --config rs_demo.yaml` now shows `my_random` among the strategies (plain `eyas list` only imports the built-ins; it reads no config, so plugin registrations are invisible to it). Registration routes are the same as for tasks, and shared with backends, protocols, and judges:
+`uv run eyas list --config rs_demo.yaml` now shows `my_random` among the strategies (plain `uv run eyas list` only imports the built-ins; it reads no config, so plugin registrations are invisible to it). Registration routes are the same as for tasks, and shared with backends, protocols, and judges:
 
 - the config `plugins` key, which imports your module before any registry lookup (what the config above does):
 
   ```yaml
-  plugins: [my_strategy] # dotted module paths resolve against the CWD — run from the repo root
+  plugins: [my_strategy] # dotted module paths resolve against the working directory you launch eyas from
   ```
 
 - the `eyas.plugins` entry-points group for packaged plugins (no `plugins` line anywhere):
@@ -204,11 +204,11 @@ uv run eyas run --config rs_demo.yaml
 
 One trap spans all routes: import your plugin module under a **single canonical dotted path**. Python re-executes a module imported via two different paths (e.g. `plugins: [my_strategy]` from the CWD plus a test importing it as `examples.foo.my_strategy`), which re-runs the decorators against fresh class objects and trips the duplicate-name guard; pick the path that both your config and your tests resolve to.
 
-The worked example for both routes, with registration, a runnable config, and a CI test that pins the whole story, is [`examples/plugin_backend/`](../../examples/plugin_backend/README.md) (a backend; the mechanism is identical for strategies).
+The worked example for both routes, with registration, a runnable config, and a CI test that pins the whole story, is [`examples/plugin_backend/`](../../examples/plugin_backend/README.md) (a repository-checkout example; a backend, but the mechanism is identical for strategies).
 
 ## Test it
 
-The contract-test pillar applies to strategies too: your method must complete with zero GPU, and the framework's own suite proves every shipped strategy does exactly that on its scripted in-repo test backend. The in-hand equivalent is [`examples/strategy_skeleton/my_method_test.py`](../../examples/strategy_skeleton/my_method_test.py), a self-contained test that assembles a `RunContext` against that same scripted test backend, drives `OptimizerLoop(...).run(strategy, seeds)` directly, and asserts on `result.best` and the history. Running the config above is the smoke version of the same contract.
+The contract-test pillar applies to strategies too: your method must complete with zero GPU, and the framework's own suite proves every shipped strategy does exactly that on its scripted in-repo test backend. The in-hand equivalent is [`examples/strategy_skeleton/my_method_test.py`](../../examples/strategy_skeleton/my_method_test.py) in a repository checkout, a self-contained test that assembles a `RunContext` against that same scripted test backend, drives `OptimizerLoop(...).run(strategy, seeds)` directly, and asserts on `result.best` and the history. Running the config above is the smoke version of the same contract.
 
 ## Where to go from here
 
