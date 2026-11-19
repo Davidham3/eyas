@@ -478,7 +478,7 @@ def test_ape_floor_keeps_default_when_generation_echoes_dataset_text():
 
 # --- APE forward-induction fingerprints ---
 #
-# Paper (arXiv:2211.01910 §3.1, forward mode) + author repo template memo: the model
+# Paper (APE, ICLR 2023, arXiv:2211.01910 §3.1) forward-mode + author repo memo: the model
 # induces the instruction from INPUT→OUTPUT demonstrations -- "I gave a friend an
 # instruction. Based on the instruction they produced the following input-output
 # pairs: [full_DEMO] The instruction was to [APE]", demos "Input: [INPUT]\nOutput:
@@ -866,8 +866,8 @@ def test_evoprompt_de_positional_replacement():
 
 # --- EvoPrompt operator fingerprints ---
 #
-# The paper's core contribution is the DESIGNED operators (arXiv:2309.08532 §3.2/§3.3):
-# roulette-wheel GA parents (Table 4: wheel beats tournament/random), the two-step
+# The paper's core contribution is the DESIGNED operators (EvoPrompt, ICLR 2024, arXiv:2309.08532
+# §3.2/§3.3): roulette-wheel GA parents (Table 4: wheel beats tournament/random), the two-step
 # merge→adjust GA template, and the four-step DE text adaptation with the champion in
 # the "Prompt 3" slot. The mock never reads request text, so these must be pinned here.
 
@@ -1342,8 +1342,8 @@ def test_protegi_gradient_and_bandit_budget():
 
 # --- ProTeGi mechanism fingerprints ---
 #
-# Paper (arXiv:2305.03495) Algorithm 2: a TWO-CALL dialogue per parent (∇ critique →
-# δ edit fed the parsed gradient), a paraphrase (mc) expansion pass capped at
+# Paper (ProTeGi, EMNLP 2023, arXiv:2305.03495) Algorithm 2: a TWO-CALL dialogue per
+# parent (∇ critique → δ edit fed the parsed gradient), a paraphrase (mc) expansion pass capped at
 # max_expansion_factor, and error groups RANDOMLY sampled. Selection ranks by the
 # bandit's pooled Q̂ (SelectTop_b(Q_T)), never by archive best-subset scores.
 # The mock never reads request text, so these must be pinned here.
@@ -2201,7 +2201,7 @@ def test_ape_stratified_demos_labelless_single_bucket() -> None:
 
 # --- SPO self-supervised OvO fingerprints ---
 #
-# Paper (arXiv:2502.06855 / official FoundationAgents/SPO,
+# Paper (SPO, Findings of EMNLP 2025, arXiv:2502.06855 / official FoundationAgents/SPO,
 # https://github.com/FoundationAgents/SPO/commit/e8381f07): selection is a
 # reference-free OUTPUT-vs-OUTPUT pairwise vote — the evaluator compares the two prompts'
 # ANSWERS, never a gold label; φopt consumes the incumbent prompt AND its sample outputs;

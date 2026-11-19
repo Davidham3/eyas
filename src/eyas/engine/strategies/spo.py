@@ -219,8 +219,8 @@ class SpoStrategy(Strategy):
         if not seeds:
             raise ValueError("spo requires at least one seed prompt")
         if len(seeds) > 1:
-            # SPO is single-incumbent-chained (arXiv:2502.06855 §3): P0 is the
-            # incumbent and the only seed carried through the loop. Dropping a
+            # SPO is single-incumbent-chained (Findings of EMNLP 2025, arXiv:2502.06855 §3):
+            # P0 is the incumbent and the only seed carried through the loop. Dropping a
             # provided seed silently would violate the fail-fast contract, so
             # the drop is named here.
             _log.warning(

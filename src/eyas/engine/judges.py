@@ -10,8 +10,8 @@ members of the same ``judge`` family as the per-sample judges.
 ``AnswerPairwiseJudge`` serves the same contract with a different object of
 comparison: the two texts are model ANSWERS to the
 question, not instructions, and the request carries NO reference field — SPO's
-selection signal is reference-free (arXiv:2502.06855), so a gold label is
-structurally impossible to leak through this judge's request.
+selection signal is reference-free (Findings of EMNLP 2025, arXiv:2502.06855),
+so a gold label is structurally impossible to leak through this judge's request.
 """
 
 from __future__ import annotations
