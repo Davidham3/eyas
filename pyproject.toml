@@ -1,8 +1,8 @@
 [project]
 name = "eyas"
-version = "0.1.0"
+version = "0.1.0rc1"
 description = "Train sharp-eyed prompts for multimodal models. A performance-first APO (automatic prompt optimization) framework for text, image and video tasks."
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.12,<3.15"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{ name = "ChaoSong", email = "davidchaosong@outlook.com" }]
@@ -22,6 +22,8 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [

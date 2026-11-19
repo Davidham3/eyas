@@ -13,6 +13,10 @@ concurrency:
 jobs:
   gate:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
 
@@ -24,18 +28,21 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Sync core deps (no torch / no GPU)
         run: uv sync
 
-      - name: Ruff (lint)
+      - name: Ruff (lint)  # lint/type gates ride the reference interpreter (3.12), like vLLM's own CI
+        if: matrix.python-version == '3.12'
         run: uv run ruff check src tests
 
       - name: Ruff (format check)
+        if: matrix.python-version == '3.12'
         run: uv run ruff format --check src tests
 
       - name: mypy (types)
+        if: matrix.python-version == '3.12'
         run: uv run mypy src
 
       - name: pytest (fast suite, mock backend, zero GPU)
