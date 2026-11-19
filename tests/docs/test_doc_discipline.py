@@ -1,6 +1,6 @@
 """Documentation-discipline gates over the shipped tree (zero GPU, zero deps).
 
-Two invariants that keep in-code prose reviewable as the tree evolves:
+Three invariants that keep in-code prose reviewable as the tree evolves:
 
 1. every path token a module docstring names (``src/``, ``configs/``, …) must
    still resolve on disk — the cheap mechanical half of guarding long docstrings
@@ -8,6 +8,10 @@ Two invariants that keep in-code prose reviewable as the tree evolves:
 2. every ``arXiv:`` citation carries a venue and year on the citing line (or its
    immediate wrap) — a bare identifier is not reviewer-verifiable offline, and a
    wrong venue is worse than none.
+3. the environment-knob table in ``docs/tutorials/backends.md`` matches the
+   ``EYAS_*`` variables the framework actually reads — both directions: a knob
+   without a table row is an undocumented switch, a row without a knob is stale
+   documentation users will trust.
 
 Both gates are intentionally dumb and total: no allowlists, no exemptions.
 """
@@ -62,4 +66,24 @@ def test_arxiv_citations_carry_venue() -> None:
                     offenders.append(f"{py.relative_to(REPO)}:{i + 1}: {line.strip()}")
     assert not offenders, (
         "arXiv citations without venue+year on the citing line/wrap:\n" + "\n".join(offenders)
+    )
+
+
+_ENV_TOKEN = re.compile(r"EYAS_[A-Z][A-Z0-9_]*")
+_ENV_TABLE_ROW = re.compile(r"^\| `(EYAS_[A-Z0-9_]+)`")
+
+
+def test_env_knobs_match_the_backends_table() -> None:
+    """Every ``EYAS_*`` knob read in ``src/`` has a row in the environment-knobs
+    table of ``docs/tutorials/backends.md``, and the table lists no stale knob."""
+    code: set[str] = set()
+    for py in sorted((REPO / "src").rglob("*.py")):
+        code.update(_ENV_TOKEN.findall(py.read_text(encoding="utf-8")))
+    table = (REPO / "docs" / "tutorials" / "backends.md").read_text(encoding="utf-8")
+    documented = {m.group(1) for line in table.splitlines() if (m := _ENV_TABLE_ROW.match(line))}
+    assert code and documented, "scan degenerate: one side empty"
+    missing = sorted(code - documented)
+    stale = sorted(documented - code)
+    assert not missing and not stale, (
+        f"env knobs read but undocumented: {missing}; documented but no longer read: {stale}"
     )
