@@ -37,7 +37,27 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     run_p = sub.add_parser("run", help="Run one contract-driven optimization from a sectioned YAML")
-    run_p.add_argument("--config", required=True, help="Experiment config YAML")
+    run_p.add_argument(
+        "--config", help="Experiment config YAML (a custom or gen-configs-generated file)"
+    )
+    run_p.add_argument(
+        "--cell",
+        metavar="DATASET/METHOD",
+        help=(
+            "Assemble one quickstart cell from configs/spec and run it directly "
+            "(no YAML file), e.g. --cell pets/raw"
+        ),
+    )
+    run_p.add_argument(
+        "--variant",
+        help="(--cell mode) assembled variant, e.g. openai (see configs/spec/cells.yaml)",
+    )
+    run_p.add_argument(
+        "--spec-dir",
+        default="configs/spec",
+        metavar="DIR",
+        help="(--cell mode) config-spec directory (default: configs/spec)",
+    )
     run_p.add_argument(
         "--set",
         action="append",
@@ -79,19 +99,40 @@ def main(argv: list[str] | None = None) -> int:
         metavar="SPEC.yaml",
         help=(
             "Matrix spec YAML: expand facet axes into cells and run them in "
-            "order (base config + override-dict axes; see configs/matrix.yaml). "
-            "Backend blocks are shared across cells with an identical backend "
-            "section (one weight load per model tag). Combine with --filter and "
-            "--set (e.g. one sweep cell set = --filter tag=X --filter dataset=Y "
-            "--set run.seed=NN)."
+            "order (base config + override-dict axes). Backend blocks are "
+            "shared across cells with an identical backend section (one weight "
+            "load per model tag). Combine with --filter and --set (e.g. one "
+            "sweep cell set = --filter tag=X --filter dataset=Y --set "
+            "run.seed=NN)."
         ),
+    )
+    sweep_p.add_argument(
+        "--spec",
+        metavar="BENCHMARK.yaml",
+        help=(
+            "Benchmark spec inside a config spec (configs/spec/benchmark.yaml): "
+            "expand the published matrix from configs/spec with no per-cell "
+            "files — cell bases are assembled (axes × combos; --filter/--set as "
+            "in --matrix mode)."
+        ),
+    )
+    sweep_p.add_argument(
+        "--spec-dir",
+        default="configs/spec",
+        metavar="DIR",
+        help="(--spec mode) config-spec directory holding benchmark.yaml (default: configs/spec)",
+    )
+    sweep_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="(expansion modes) print the expansion and exit without running",
     )
     sweep_p.add_argument(
         "--filter",
         action="append",
         default=[],
         metavar="AXIS=VALUE[,VALUE]",
-        help="(--matrix mode) restrict an axis to listed values, repeatable",
+        help="(--matrix/--spec mode) restrict an axis to listed values, repeatable",
     )
     sweep_p.add_argument(
         "--share-backends",
@@ -105,6 +146,32 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         metavar="KEY=VALUE",
         help="Dotted-path overrides (apply to every config, repeatable)",
+    )
+
+    gen_p = sub.add_parser(
+        "gen-configs",
+        help="Export editable cell YAMLs from configs/spec (escape hatch; products are gitignored)",
+    )
+    gen_p.add_argument(
+        "--cell",
+        action="append",
+        metavar="DATASET/METHOD",
+        help="Cell to export (repeatable; default: every dataset x method in the spec)",
+    )
+    gen_p.add_argument(
+        "--variant",
+        help="Export the variant mirror of each --cell (requires --cell), e.g. openai",
+    )
+    gen_p.add_argument(
+        "--out",
+        default="configs/generated",
+        help="Output directory (default: configs/generated, gitignored)",
+    )
+    gen_p.add_argument(
+        "--spec-dir",
+        default="configs/spec",
+        metavar="DIR",
+        help="Config-spec directory (default: configs/spec)",
     )
 
     args = parser.parse_args(argv)
@@ -127,12 +194,58 @@ def _cmd_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int
     from eyas.engine.runtime import load_config, run_plan, run_sweep
     from eyas.runtime.config import apply_overrides
 
-    if sum(bool(x) for x in (args.config, args.plan, args.matrix)) != 1:
-        parser.error("sweep needs exactly one of --config (repeatable), --plan, or --matrix")
-    if args.filter and not args.matrix:
-        parser.error("--filter only applies to --matrix")
+    if sum(bool(x) for x in (args.config, args.plan, args.matrix, args.spec)) != 1:
+        parser.error(
+            "sweep needs exactly one of --config (repeatable), --plan, --matrix, or --spec"
+        )
+    if args.filter and not (args.matrix or args.spec):
+        parser.error("--filter only applies to --matrix/--spec")
+    if args.dry_run and not (args.matrix or args.spec):
+        parser.error("--dry-run only applies to --matrix/--spec")
+    if args.spec:
+        from eyas.configspec import (
+            benchmark_axes_spec,
+            benchmark_cells,
+            load_spec,
+            spec_sha,
+        )
+        from eyas.runtime.matrix import describe_expansion, parse_filters
+
+        try:
+            spec = load_spec(args.spec_dir)
+            axes_spec = benchmark_axes_spec(spec)
+            if Path(args.spec).resolve() != axes_spec.path.resolve():
+                raise ValueError(
+                    f"--spec {args.spec} is not the benchmark section of {args.spec_dir} "
+                    f"(expected {axes_spec.path})"
+                )
+            filters = parse_filters(args.filter, axes_spec)
+            cells = benchmark_cells(spec, filters)
+        except (ValueError, FileNotFoundError) as exc:
+            parser.error(f"--spec {args.spec}: {exc}")
+        if not cells:
+            parser.error(f"--spec expansion produced no cells (filters: {args.filter})")
+        sha = spec_sha(spec)
+        configs = []
+        for _, cfg in cells:
+            cfg["run"]["spec_sha"] = sha
+            configs.append(apply_overrides(cfg, args.set))
+        print(describe_expansion(axes_spec, filters, len(configs)))
+        if args.dry_run:
+            for name, _ in cells:
+                print(name)
+            print(f"dry-run: {len(configs)} cells, spec_sha={sha} — nothing executed")
+            return 0
+        output_root = args.output_root or (
+            Path("outputs") / f"sweep-{datetime.now():%Y%m%d-%H%M%S}"
+        )
+        run_dirs = run_sweep(configs, output_root, share_backends=True)
+        print(f"sweep done: {len(run_dirs)} runs, output root: {output_root}")
+        print(report_runs(run_dirs, fmt="md"))
+        return 0
     if args.matrix:
         from eyas.runtime.matrix import (
+            default_base_resolver,
             describe_expansion,
             expand_matrix,
             load_matrix_spec,
@@ -140,16 +253,24 @@ def _cmd_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int
         )
 
         try:
-            spec = load_matrix_spec(args.matrix)
-            filters = parse_filters(args.filter, spec)
-            configs = [cfg for _, cfg in expand_matrix(spec, filters, load_base=load_config)]
+            matrix = load_matrix_spec(args.matrix)
+            filters = parse_filters(args.filter, matrix)
+            configs = [
+                cfg
+                for _, cfg in expand_matrix(
+                    matrix, filters, resolve_base=default_base_resolver(matrix, load_config)
+                )
+            ]
         except (ValueError, FileNotFoundError) as exc:
             parser.error(f"--matrix {args.matrix}: {exc}")
         if not configs:
             parser.error(f"--matrix expansion produced no cells (filters: {args.filter})")
         # per-cell overrides ride on top of the expansion (--set run.seed=NN)
         configs = [apply_overrides(cfg, args.set) for cfg in configs]
-        print(describe_expansion(spec, filters, len(configs)))
+        print(describe_expansion(matrix, filters, len(configs)))
+        if args.dry_run:
+            print(f"dry-run: {len(configs)} cells — nothing executed")
+            return 0
         output_root = args.output_root or (
             Path("outputs") / f"sweep-{datetime.now():%Y%m%d-%H%M%S}"
         )
@@ -181,17 +302,104 @@ def _cmd_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int
     return 0
 
 
+def _cmd_gen_configs(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+    """Export editable cell YAMLs from configs/spec (the escape hatch): default
+    every dataset x method plus the variant mirrors the spec declares available.
+    Products live under configs/generated (gitignored) and carry a GENERATED
+    header — the committed surface stays the spec. Validation is fail-fast:
+    the whole plan is checked before a single file is written."""
+    from eyas.configspec import cell_notes, load_spec, render_cell_yaml
+
+    if args.variant and not args.cell:
+        parser.error(
+            "--variant requires --cell (the default export already covers "
+            "every available variant mirror)"
+        )
+    try:
+        spec = load_spec(args.spec_dir)
+        if args.variant and args.variant not in spec.variants:
+            raise ValueError(f"unknown variant {args.variant!r} (known: {sorted(spec.variants)})")
+        cells: list[tuple[str, str, str | None, str]] = []
+        if args.cell:
+            for item in args.cell:
+                if "/" not in item or item.count("/") != 1:
+                    raise ValueError(f"--cell must be DATASET/METHOD, got {item!r}")
+                dataset, method = item.split("/")
+                stem = f"{dataset}_{method}" + (f"_{args.variant}" if args.variant else "")
+                cells.append((dataset, method, args.variant, stem))
+            if args.variant:
+                available_list = spec.variants[args.variant].available
+                for dataset, method, _, _ in cells:
+                    if f"{dataset}/{method}" not in available_list:
+                        available = ", ".join(available_list) or "(none)"
+                        raise ValueError(
+                            f"cell {dataset}/{method} has no {args.variant!r} variant "
+                            f"(available: {available})"
+                        )
+        else:
+            cells = [
+                (dataset, method, None, f"{dataset}_{method}")
+                for dataset in spec.datasets
+                for method in spec.methods
+            ]
+            for name, variant in sorted(spec.variants.items()):
+                for cell in variant.available:
+                    ds, meth = cell.split("/")
+                    cells.append((ds, meth, name, f"{ds}_{meth}_{name}"))
+        # render everything in memory first: a mid-batch assembly failure must
+        # not leave a half-written output dir behind
+        rendered = [
+            (stem, render_cell_yaml(spec, dataset, method, variant))
+            for dataset, method, variant, stem in cells
+        ]
+        out_dir = Path(args.out)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        for stem, text in rendered:
+            (out_dir / f"{stem}.yaml").write_text(text, encoding="utf-8")
+    except (ValueError, FileNotFoundError) as exc:
+        parser.error(str(exc))
+    notes = sum(len(cell_notes(spec, d, m, v)) for d, m, v, _ in cells)
+    print(
+        f"gen-configs: {len(rendered)} YAMLs -> {out_dir}/ (GENERATED headers, {notes} why-notes)"
+    )
+    return 0
+
+
 def _cmd_run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
-    """Run one contract-driven optimization from a sectioned YAML."""
+    """Run one contract-driven optimization: a sectioned YAML, or one cell
+    assembled live from configs/spec (``--cell``)."""
     if args.resume and args.output_dir:
         # Documented contract, parser-enforced: resume reuses an existing
         # run dir, so --output-dir has nothing left to say (no silent
         # precedence between the two).
         parser.error("--resume and --output-dir are mutually exclusive")
+    if sum(bool(x) for x in (args.config, args.cell)) != 1:
+        parser.error("run needs exactly one of --config or --cell")
+    if args.variant and not args.cell:
+        parser.error("--variant only applies to --cell")
     from eyas.engine.runtime import load_config, run_experiment
     from eyas.runtime.config import apply_overrides
 
-    config = apply_overrides(load_config(args.config), args.set)
+    if args.cell:
+        from eyas.configspec import cell_config, load_spec, spec_sha
+
+        if "/" not in args.cell or args.cell.count("/") != 1:
+            parser.error(f"--cell must be DATASET/METHOD, got {args.cell!r}")
+        dataset, method = args.cell.split("/")
+        try:
+            spec = load_spec(args.spec_dir)
+            # spec + run dir is the reproducibility record: the content hash
+            # rides the run section next to the effective config the runtime
+            # persists (run_config.json). Stamped here, at the CLI boundary —
+            # cell_config stays the golden-pure assembly.
+            config = cell_config(spec, dataset, method, args.variant)
+            config["run"]["spec_sha"] = spec_sha(spec)
+        except (ValueError, FileNotFoundError) as exc:
+            parser.error(f"--cell {args.cell}: {exc}")
+    else:
+        assert args.config is not None  # exactly-one-of check above
+        config = load_config(args.config)
+    config = apply_overrides(config, args.set)
     result = run_experiment(config, output_dir=args.output_dir, resume=args.resume)
     best = result.best_text()
     print(f"Done: best={best!r} requests={result.total_cost.requests}")
@@ -474,6 +682,7 @@ def _cmd_prepare(argv: list[str]) -> int:
 #: top-level ``_cmd_*`` function; ``main`` only builds the parser and dispatches.
 _COMMANDS: dict[str, Callable[[argparse.ArgumentParser, argparse.Namespace], int]] = {
     "list": _cmd_list,
+    "gen-configs": _cmd_gen_configs,
     "run": _cmd_run,
     "report": _cmd_report,
     "status": _cmd_status,

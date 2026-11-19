@@ -136,5 +136,13 @@ disallow_untyped_defs = true
 # Developers on slow shared filesystems can redirect it per-machine via the
 # MYPY_CACHE_DIR environment variable.
 
+[[tool.mypy.overrides]]
+module = "eyas.prepare"
+# The quickstart data-prep pipeline was vendored from a standalone script (heavy
+# IO + untyped third-party reader deps). Its zero-network conversion/sampling
+# contract is pinned by tests/test_prepare_quickstart.py; a full annotation pass
+# is a scheduled follow-up, not part of the engine's typed surface.
+ignore_errors = true
+
 [tool.coverage.run]
 source = ["src/eyas"]

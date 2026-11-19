@@ -57,3 +57,7 @@ tmp/
 uv.toml
 .env
 logs/
+
+# gen-configs products (eyas gen-configs renders these from configs/spec on
+# demand; the committed surface is the spec, never the generated cells)
+configs/generated/
