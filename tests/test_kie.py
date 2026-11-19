@@ -436,10 +436,9 @@ def test_kie_task_config_validation_and_split_cache(tmp_path: Path):
 # Evaluator end-to-end contract (engine assembly)
 # ---------------------------------------------------------------------------
 def test_kie_task_end_to_end_with_evaluator(tmp_path: Path):
-    from conftest import full_split_plan, make_evaluator
-
     from eyas.backends.scheduling import run_sync
     from eyas.engine.domain import Prompt
+    from tests.support.engine import full_split_plan, make_evaluator
 
     img_a = str(tmp_path / "a.jpg")
     img_b = str(tmp_path / "b.jpg")
@@ -472,10 +471,9 @@ def test_kie_task_end_to_end_with_evaluator(tmp_path: Path):
 
 
 def test_kie_task_end_to_end_parse_fail_scores_zero(tmp_path: Path):
-    from conftest import full_split_plan, make_evaluator
-
     from eyas.backends.scheduling import run_sync
     from eyas.engine.domain import Prompt
+    from tests.support.engine import full_split_plan, make_evaluator
 
     img_a = str(tmp_path / "a.jpg")
     img_b = str(tmp_path / "b.jpg")

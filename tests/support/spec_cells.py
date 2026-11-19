@@ -13,7 +13,7 @@ from pathlib import Path
 
 from eyas.configspec import Spec, cell_config, load_spec, render_cell_yaml
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SPEC_DIR = ROOT / "configs" / "spec"
 
 _SPEC: Spec | None = None

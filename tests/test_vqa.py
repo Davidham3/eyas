@@ -166,10 +166,9 @@ def test_vqa_task_load_split_caches_and_rejects_incomplete_config():
 # Evaluator end-to-end contract (engine assembly, mock backend, zero GPU)
 # ---------------------------------------------------------------------------
 def test_vqa_task_end_to_end_with_evaluator(tmp_path: Path):
-    from conftest import full_split_plan, make_evaluator
-
     from eyas.backends.scheduling import run_sync
     from eyas.engine.domain import Prompt
+    from tests.support.engine import full_split_plan, make_evaluator
 
     data_dir = _write_split(
         tmp_path,

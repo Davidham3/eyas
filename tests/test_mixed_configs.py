@@ -4,7 +4,8 @@ the shared accessor, same assertions the per-cell YAMLs carried."""
 import re
 
 import pytest
-from _spec_cells import cell, cell_id, shipped_cells
+
+from tests.support.spec_cells import cell, cell_id, shipped_cells
 
 _MIXED = [(cell_id(ds, m, v), cell(ds, m, v)) for ds, m, v in shipped_cells() if ds == "mixed"]
 

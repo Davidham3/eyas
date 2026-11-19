@@ -8,10 +8,10 @@ spec (``tests/test_configs.py`` covers binding for every cell).
 """
 
 import pytest
-from _spec_cells import cell
 
 from eyas.tasks.math_qa import MathQaTask
 from eyas.tasks.video_mcq import VideoMcqTask
+from tests.support.spec_cells import cell
 
 _TASK = {"math_qa": MathQaTask, "video_mcq": VideoMcqTask}
 BOARDS = {

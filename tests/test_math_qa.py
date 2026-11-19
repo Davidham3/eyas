@@ -131,12 +131,11 @@ def test_task_requires_data_source_and_is_registered():
 
 def test_math_qa_end_to_end_with_evaluator(tmp_path):
     """Text-only requests survive the whole engine assembly (planner + mock backend)."""
-    from conftest import full_split_plan, make_evaluator
-
     from eyas.backends.mock import ScriptedMockBackend
     from eyas.backends.scheduling import run_sync
     from eyas.engine.domain import Prompt
     from eyas.tasks.protocol import IdentityProtocol
+    from tests.support.engine import full_split_plan, make_evaluator
 
     items = [
         {"id": "m0", "question": "1+1?", "answer": "2"},

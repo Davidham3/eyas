@@ -13,75 +13,27 @@ Contract under test:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 import pytest
-from conftest import full_split_plan, make_evaluator
 
 from eyas.backends.base import (
     ChatRequest,
     ChatResponse,
     SamplingConfig,
-    system_message,
-    user_message,
 )
 from eyas.backends.mock import ScriptedMockBackend
 from eyas.backends.scheduling import run_sync
-from eyas.core.objective import Objective
 from eyas.engine import builtin  # noqa: F401  trigger registration
 from eyas.engine.domain import Cost, Prompt
 from eyas.judges.base import ChainedJudge, JudgeContext
 from eyas.judges.exact_match import ExactMatchJudge
 from eyas.judges.mcq_judge import McqLLMJudge
-from eyas.registry import register_task
-from eyas.tasks.base import Prediction, Sample, Task, Variant
-from eyas.tasks.mcq import match_prediction
+from eyas.tasks.base import Prediction, Sample
 from eyas.tasks.protocol import IdentityProtocol
+from tests.support.engine import CostToyMCQ, full_split_plan, make_evaluator
 
 _CHOICES = ["cat", "dog"]
 _EVAL_USAGE = {"prompt_tokens": 10, "completion_tokens": 4}
 _JUDGE_USAGE = {"prompt_tokens": 6, "completion_tokens": 2}
-
-
-def _samples() -> list[Sample]:
-    return [
-        Sample(
-            id="s1",
-            inputs={"image": "/data/1.jpg", "choices": _CHOICES, "group": "g"},
-            references={"label": "cat"},
-        ),
-        Sample(
-            id="s2",
-            inputs={"image": "/data/2.jpg", "choices": _CHOICES, "group": "g"},
-            references={"label": "dog"},
-        ),
-    ]
-
-
-@register_task("cost_toy_mcq")
-class CostToyMCQ(Task):
-    """Minimal MCQ shape: unparseable text -> value=None (so exact_match abstains
-    and the LLM judge takes over)."""
-
-    name = "cost_toy_mcq"
-    objectives = (Objective(key="accuracy"),)
-    default_prompt = "Classify the animal."
-
-    def load_split(self, split: str) -> Sequence[Sample]:
-        return _samples()
-
-    def build_request(self, prompt: str, sample: Sample, variant: Variant) -> ChatRequest:
-        return ChatRequest(
-            messages=(system_message(prompt), user_message(sample.inputs["image"])),
-            request_id=sample.id,
-        )
-
-    def parse_response(self, response: ChatResponse, sample: Sample) -> Prediction:
-        value = match_prediction(response.text, sample.inputs["choices"])
-        return Prediction(value=value, raw=response.text)
-
-    def score(self, prediction: Prediction, sample: Sample) -> dict[str, float]:
-        return {"accuracy": 1.0 if prediction.value == sample.references["label"] else 0.0}
 
 
 def _responder(eval_texts: dict[str, str]):

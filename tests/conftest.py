@@ -1,41 +1,13 @@
-"""Shared test helpers: engine Evaluator assembly helper (reused by per-task end-to-end contracts)."""
+"""Shared pytest fixtures for the test suite.
+
+Plain helpers live in ``tests/support/engine.py``; this file keeps fixtures
+only — pytest collects conftest per-directory, so anything non-fixture here
+would be imported by every test session regardless of topic.
+"""
 
 from __future__ import annotations
 
 import pytest
-
-from eyas.backends.base import InferenceBackend
-from eyas.engine.budget import LoadPlan, WorkItem
-from eyas.engine.capability import ResourceProfile
-from eyas.engine.domain import Prompt
-from eyas.engine.evaluation import AbsoluteEvalModel, Evaluator
-from eyas.engine.planner import RequestPlanner
-from eyas.judges.base import Judge
-from eyas.tasks.base import Task
-from eyas.tasks.protocol import VariantProtocol
-
-
-def make_evaluator(
-    task: Task,
-    backend: InferenceBackend,
-    protocol: VariantProtocol,
-    produces: frozenset[str],
-    judge: Judge | None = None,
-) -> Evaluator:
-    """Standard zero-GPU engine Evaluator assembly for contract tests (planner + absolute scoring)."""
-    return Evaluator(
-        task=task,
-        protocol=protocol,
-        backend=backend,
-        planner=RequestPlanner(ResourceProfile(), context_window=None),
-        model=AbsoluteEvalModel(produces=frozenset(produces)),
-        judge=judge,
-    )
-
-
-def full_split_plan(prompt: Prompt) -> LoadPlan:
-    """Empty sample_ids = the full split."""
-    return LoadPlan(items=(WorkItem(prompt),))
 
 
 # Engine backend class for the sampling-contract pins: the module imports without

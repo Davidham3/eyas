@@ -18,7 +18,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
-from conftest import make_evaluator
 
 from eyas.backends.base import (
     OVER_WINDOW_FINISH,
@@ -38,6 +37,7 @@ from eyas.judges.mcq_judge import McqLLMJudge
 from eyas.tasks.base import Prediction, Sample, Task, Variant
 from eyas.tasks.mcq import match_prediction
 from eyas.tasks.protocol import IdentityProtocol
+from tests.support.engine import make_evaluator
 
 _CHOICES = ["cat", "dog"]
 _EVAL_USAGE = {"prompt_tokens": 10, "completion_tokens": 4}

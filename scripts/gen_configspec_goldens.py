@@ -42,12 +42,12 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-# The repo root goes on sys.path for tests._spec_cells; eyas itself resolves
+# The repo root goes on sys.path for tests.support.spec_cells; eyas itself resolves
 # from the sync'd/installed environment (uv run / pip install), never from here.
 sys.path.insert(0, str(REPO))
 
 from eyas.configspec import benchmark_cells, cell_digest  # noqa: E402
-from tests._spec_cells import cell, cell_id, shipped_cells, spec  # noqa: E402
+from tests.support.spec_cells import cell, cell_id, shipped_cells, spec  # noqa: E402
 
 GOLDEN_DIR = REPO / "tests" / "goldens" / "configspec"
 _MANIFEST_HEADER = (

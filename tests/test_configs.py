@@ -2,7 +2,7 @@
 
 The per-cell YAMLs are retired: the shipped surface is configs/spec, and each
 cell's effective config is the assembler's product (golden parity pinned by
-tests/test_configspec.py; the shared accessor tests/_spec_cells.py states the
+tests/test_configspec.py; the shared accessor tests/support/spec_cells.py states the
 cell set). For every shipped run config — every spec cell (board x method grid
 + available mirrors) plus the standalone configs/tutorial_shapes.yaml — where
 "shipped" means strategy section present, no optimizer section, validate:
@@ -26,8 +26,6 @@ from typing import Any
 
 import pytest
 import yaml
-from _spec_cells import cell, cell_text, shipped_cells
-from _spec_cells import cell_id as make_cell_id
 
 import eyas.builtin  # noqa: F401
 import eyas.engine.builtin  # noqa: F401
@@ -35,6 +33,8 @@ from eyas import registry as base_registry
 from eyas.engine import registry as engine_registry
 from eyas.engine.capability import ABSOLUTE_EVAL, COMPARE_EVAL
 from eyas.engine.runtime import load_config
+from tests.support.spec_cells import cell, cell_text, shipped_cells
+from tests.support.spec_cells import cell_id as make_cell_id
 
 _ROOT = Path(__file__).resolve().parents[1]
 

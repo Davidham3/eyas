@@ -50,11 +50,11 @@ from types import ModuleType
 
 import pytest
 import yaml
-from _spec_cells import cell
 
 from eyas.backends.mock import ScriptedMockBackend
 from eyas.cli import main
 from eyas.tasks.mixed_mcq import MIXED_COMBOS
+from tests.support.spec_cells import cell
 
 _ROOT = Path(__file__).resolve().parents[1]
 _SCRIPT = _ROOT / "scripts" / "prepare_mixed_data.py"

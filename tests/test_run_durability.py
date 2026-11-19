@@ -7,11 +7,11 @@ from __future__ import annotations
 import json
 
 import pytest
-from test_final_eval import _cfg
 
 from eyas.engine.runtime import run_experiment
 from eyas.engine.status import write_json_atomic
 from eyas.logging import _reset
+from tests.support.engine import toy_final_eval_cfg as _cfg
 
 
 @pytest.fixture(autouse=True)

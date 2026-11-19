@@ -302,7 +302,7 @@ def test_mcq_end_to_end_with_llm_judge():
         # s1 answers perfectly; s2 emits unparseable free text to force the judge fallback
         return _resp("boeing" if sample_id == "s1" else "a large white aircraft")
 
-    from conftest import full_split_plan, make_evaluator
+    from tests.support.engine import full_split_plan, make_evaluator
 
     prompt = Prompt(INSTRUCTION)
     evaluator = make_evaluator(
@@ -514,11 +514,10 @@ def test_mcq_classify_original_task_judges_on_the_rendered_classify_text():
     """The OPRO pairing documented in eyas/tasks/mcq.py: the "Original Task"
     section is the text the classify request actually rendered, not the bare
     candidate prompt."""
-    from conftest import full_split_plan, make_evaluator
-
     from eyas.backends.base import user_text
     from eyas.backends.scheduling import run_sync
     from eyas.engine.domain import Prompt
+    from tests.support.engine import full_split_plan, make_evaluator
 
     classify_texts: dict[str, str] = {}
     judge_prompts: dict[str, str] = {}

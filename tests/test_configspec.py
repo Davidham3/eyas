@@ -25,10 +25,10 @@ import re
 from pathlib import Path
 
 import pytest
-from _spec_cells import cell_id, shipped_cells
 
 from eyas.configspec import benchmark_cells, cell_config, cell_digest, load_spec
 from eyas.engine.runtime import load_config
+from tests.support.spec_cells import cell_id, shipped_cells
 
 _ROOT = Path(__file__).resolve().parents[1]
 _GOLDEN = _ROOT / "tests" / "goldens" / "configspec"
