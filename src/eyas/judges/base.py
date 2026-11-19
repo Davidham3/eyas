@@ -9,6 +9,8 @@ from eyas.backends.base import ChatResponse, InferenceBackend, SamplingConfig
 from eyas.registry import register_judge
 from eyas.tasks.base import Prediction, Sample, Variant
 
+# register_judge is re-exported so a custom-judge author gets the protocol and
+# the decorator from one module; the registry itself stays eyas.registry.
 __all__ = ["ChainedJudge", "Judge", "JudgeContext", "Verdict", "register_judge"]
 
 

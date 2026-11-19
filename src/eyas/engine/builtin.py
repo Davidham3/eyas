@@ -8,7 +8,7 @@ from __future__ import annotations
 from eyas.engine import judges as _judges
 from eyas.engine.budget import BanditBudget, EvenSplitBudget, FlatBudget
 from eyas.engine.evaluation import AbsoluteEvalModel, CompareEvalModel
-from eyas.engine.registry import register_budget, register_eval_model, registered
+from eyas.engine.registry import register_budget, register_eval_model
 from eyas.engine.strategies import ape, cot, evoprompt, hill_climb, opro, protegi, raw, spo
 
 register_eval_model("absolute")(AbsoluteEvalModel)
@@ -18,4 +18,6 @@ register_budget("even_split")(EvenSplitBudget)
 register_budget("bandit")(BanditBudget)
 
 STRATEGIES = (raw, cot, hill_climb, evoprompt, opro, ape, protegi, spo)
-__all__ = ["BanditBudget", "EvenSplitBudget", "FlatBudget", "STRATEGIES", "registered"]
+#: the module's own product (the published strategy tuple); budgets and eval
+#: models are importable from their home modules, not re-exported here.
+__all__ = ["STRATEGIES"]

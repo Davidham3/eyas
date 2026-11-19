@@ -7,6 +7,8 @@ from typing import ClassVar
 from eyas.registry import register_protocol
 from eyas.tasks.base import Sample, Variant
 
+# register_protocol is re-exported so a custom-protocol author gets the base
+# classes and the decorator from one module; the registry itself stays eyas.registry.
 __all__ = ["IdentityProtocol", "VariantProtocol", "register_protocol"]
 
 

@@ -8,7 +8,6 @@ from eyas.backends.base import (
     ImagePart,
     InferenceBackend,
     LoadedImage,
-    Message,
     SamplingConfig,
     TextPart,
     VideoPart,
@@ -16,15 +15,10 @@ from eyas.backends.base import (
 from eyas.registry import register_backend
 
 __all__ = [
-    "ChatRequest",
-    "ChatResponse",
-    "ImagePart",
-    "InferenceBackend",
-    "Message",
-    "SamplingConfig",
+    # only the mock's own surface: the message types live at eyas.backends.base
+    # (single source); the decorator is re-exported so a mock-backend author
+    # gets template + decorator from one module.
     "ScriptedMockBackend",
-    "TextPart",
-    "VideoPart",
     "register_backend",
 ]
 
