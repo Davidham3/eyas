@@ -5,14 +5,9 @@ under a name nothing else uses, a scripted mock backend, an evaluator, and the
 managed loop. Nothing here imports from the framework's own test suite, so this
 file is also the template you copy for your own method.
 
-Two ways to run it, both documented in the README. From the repo root:
+Run from the repo root:
 
     uv run pytest examples/strategy_skeleton -q
-
-or, on a plain checkout with no editable install (no prepared environment —
-`../../src` is the checkout's own source tree):
-
-    cd examples/strategy_skeleton && PYTHONPATH=../../src uv run python -m pytest -q
 """
 
 from __future__ import annotations

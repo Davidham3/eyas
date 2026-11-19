@@ -3,7 +3,7 @@
 # only — it proves config → assembly → OptimizerLoop → result.json, nothing more.
 #
 # Run from the repo root:
-#   PYTHONPATH=src uv run eyas run --config examples/strategy_skeleton/demo_config.yaml
+#   uv run eyas run --config examples/strategy_skeleton/demo_config.yaml
 # then read the run dir:  uv run eyas status <run dir>   (or cat its result.json)
 
 run:

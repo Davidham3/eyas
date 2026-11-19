@@ -11,10 +11,6 @@ Run from the repo root (the repo gate collects this file automatically —
 ``testpaths`` in pyproject.toml includes ``examples``):
 
     uv run pytest examples/plugin_backend -q
-
-or, from a plain checkout with no editable install:
-
-    cd examples/plugin_backend && PYTHONPATH=../../src uv run python -m pytest -q
 """
 
 from __future__ import annotations
@@ -33,7 +29,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
         "examples/plugin_backend: the installed eyas distribution is stale; "
-        "run `uv sync` (editable) or set PYTHONPATH=src"
+        "run `uv sync` from the repo root"
     ) from exc
 
 from eyas.backends.base import (

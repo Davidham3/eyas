@@ -124,8 +124,11 @@ target-version = "py312"
 select = ["E4", "E7", "E9", "F", "B", "UP", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-# every import in builtin.py is a registration side effect; "unused" does not apply
+# whole-module registration files: every import is a side effect; "unused" does
+# not apply. (Incidental registration imports inside ordinary modules keep the
+# line-level `# noqa: F401` — the exemption follows the file's purpose.)
 "src/eyas/builtin.py" = ["F401"]
+"src/eyas/engine/builtin.py" = ["F401"]
 
 [tool.mypy]
 python_version = "3.12"

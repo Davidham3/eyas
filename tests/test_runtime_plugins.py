@@ -27,7 +27,7 @@ def test_plugins_rejects_bad_shape():
 
 def test_plugins_imports_module_and_adds_cwd_to_path():
     # a stdlib module suffices to verify the import path (may already be loaded -> a no-op also passes)
-    import math  # noqa: F401
+    import math  # noqa: F401 — load_plugins imports it by name; never referenced
 
     load_plugins({"plugins": ["math"]})
     import sys

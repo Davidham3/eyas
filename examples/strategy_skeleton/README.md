@@ -26,17 +26,11 @@ From the repo root, with the repo's own environment:
 uv run pytest examples/strategy_skeleton -q
 ```
 
-From a fresh clone, with no eyas install step — enter this directory and point
-Python at the checkout's own source tree (so no stale `eyas` distribution can
-answer for it). `uv run` discovers the repo's root project from any subdirectory,
-so it supplies pytest from that environment while `PYTHONPATH` keeps the `eyas`
-import resolved from this checkout's `src/`:
+All commands in this directory assume the repo's own environment — `uv sync` at
+the repo root, then `uv run …`; `eyas` resolves as an installed package from
+that environment, never via `PYTHONPATH` pointing at `src/`.
 
-```bash
-cd examples/strategy_skeleton && PYTHONPATH=../../src uv run python -m pytest -q
-```
-
-Both shapes import the package as `examples.strategy_skeleton`, which is why the
+The tests import the package as `examples.strategy_skeleton`, which is why the
 test file resolves the repo root itself instead of relying on the current
 directory. The repo gate collects this file automatically (`testpaths` in
 `pyproject.toml` includes `examples`), so the skeleton cannot rot silently. Keep
@@ -44,7 +38,7 @@ your copy's file name matching pytest's `test_*` / `*_test` patterns — a test 
 named anything else is silently never collected, which is the one failure mode
 that looks like success.
 
-Expected output of the first command (`uv run pytest examples/strategy_skeleton -q`)
+Expected output (`uv run pytest examples/strategy_skeleton -q`)
 — seven tests, no GPU, no data download:
 
 ```
@@ -52,20 +46,14 @@ Expected output of the first command (`uv run pytest examples/strategy_skeleton 
 7 passed in 0.32s
 ```
 
-(The no-argument form in the second block collects the repo-wide `testpaths` from
-`pyproject.toml` — `tests` and `examples` — so it runs the whole fast suite, not just
-these seven tests. Exact timings — and whether pytest reports a stray environment
-warning next to the count — vary by environment; the count is the contract.)
+(Exact timings — and whether pytest reports a stray environment warning next to
+the count — vary by environment; the count is the contract.)
 
 ## Run the scripted demo
 
 ```bash
-PYTHONPATH=src uv run eyas run --config examples/strategy_skeleton/demo_config.yaml
+uv run eyas run --config examples/strategy_skeleton/demo_config.yaml
 ```
-
-(The `PYTHONPATH=src` prefix matters only if the `eyas` in your environment is
-older than this checkout; a fresh `uv sync --group dev` environment runs the
-command as-is.)
 
 The run prints one line per completed round and finishes with the winning
 prompt. It writes a run directory under `outputs/skeleton_random_search/<stamp>/`:

@@ -44,7 +44,6 @@ from typing import Any
 import yaml
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "src"))
 
 import eyas.builtin  # noqa: E402,F401  (registers built-in tasks/backends/judges/protocols)
 import eyas.engine.builtin  # noqa: E402,F401  (registers engine strategies/budgets/eval-models/judges)

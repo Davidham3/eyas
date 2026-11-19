@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
-from eyas.engine import judges as _judges  # noqa: F401 — triggers DefaultPairwiseJudge registration
+# Defensive import: loading this module must register both pairwise judges
+# regardless of what evaluation's own import chain happens to pull in.
+from eyas.engine import judges as _judges
 from eyas.engine.budget import BanditBudget, EvenSplitBudget, FlatBudget
 from eyas.engine.evaluation import AbsoluteEvalModel, CompareEvalModel
 from eyas.engine.registry import register_budget, register_eval_model, registered
