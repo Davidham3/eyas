@@ -107,9 +107,9 @@ dataset+method, so every cell inherits its
 method's exact assembly contract (hyperparameters, protocols, budgets, judges)
 verbatim from E2: **B differs from E2 only by data scale and model size**, the
 same invariant the predecessor generator encoded. The expansion is bound by
-contract tests (`tests/test_matrix_configs.py`: 336 cells across the six boards, registry binding,
+contract tests (`tests/configs/test_matrix_configs.py`: 336 cells across the six boards, registry binding,
 run identity, placeholder paths, InternVL load traits, bandit caps, curated
-pools) and golden-parity to the published wave (`tests/test_configspec.py`). What the axes carry:
+pools) and golden-parity to the published wave (`tests/configs/test_configspec.py`). What the axes carry:
 
 - `tag` (`q2b,q4b,q9b,ivl2b,ivl4b,ivl8b,q38b`) → placeholder model path; InternVL
   tags additionally replace the rendering profile (custom code, `trust_remote_code`)

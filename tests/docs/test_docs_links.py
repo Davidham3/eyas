@@ -16,7 +16,7 @@ import os
 import re
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 
 # never link/nav-scan: disposable scratch (drafts with placeholder URLs, local
 # copies), hidden tool/agent directories (dot dirs, except `.github`, which is

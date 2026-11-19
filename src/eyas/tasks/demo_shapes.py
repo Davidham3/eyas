@@ -183,7 +183,7 @@ class DemoShapesTask(Task):
                 # label cycles over the palette per sample index — deliberately independent
                 # of the image's own color (the demo's metric carries no signal; this is
                 # also what fixes the mock backend's 2/8 score on the demo train split —
-                # label order pinned by tests/test_demo_task.py — and must not shift)
+                # label order pinned by tests/tasks/test_demo_task.py — and must not shift)
                 references={"label": PALETTE[i % len(PALETTE)], "shape": shape},
             )
             for i, (_color, shape, path) in enumerate(entries)

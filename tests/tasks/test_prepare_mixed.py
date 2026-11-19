@@ -15,7 +15,7 @@ from types import ModuleType
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "prepare_mixed_data.py"
+SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "prepare_mixed_data.py"
 
 # combos that declare a clip: video, text_video, image_video, text_image_video
 VIDEO_COMBOS = 4

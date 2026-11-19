@@ -448,7 +448,7 @@ async def test_judge_scoring_fans_out_concurrently():
 # gate: every generative strategy runs its full mock loop and
 # EVERY generation request (GEN_MARKER in its system text) must carry a non-empty
 # user message. Cheap, structure-level, zero template rendering. (The real-template
-# byte smoke exists only as the SLOW-tier tests/test_renderer_goldens.py, whose
+# byte smoke exists only as the SLOW-tier tests/configs/test_renderer_goldens.py, whose
 # case matrix never covers a strategy gen request — that gap is why this gate is
 # structure-level and lives in the fast tier.)
 

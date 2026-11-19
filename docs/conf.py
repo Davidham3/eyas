@@ -21,7 +21,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # Links into examples/ are legitimate on GitHub's web renderer but lie outside
 # the sphinx source tree; their on-disk existence is gated by
-# tests/test_docs_links.py instead (same split as the build itself).
+# tests/docs/test_docs_links.py instead (same split as the build itself).
 suppress_warnings = ["myst.xref_missing"]
 
 # -- MyST -------------------------------------------------------------------

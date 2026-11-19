@@ -29,7 +29,7 @@ uv run mypy src                  # type check
   `uv run python scripts/gen_configspec_goldens.py --regen` and read the diff before committing
   — the manifests under `tests/goldens/configspec/` are a review surface: a drifted
   digest line is a real behavior change. CI validates the same invariant through the
-  default check-level tests (`tests/test_configspec.py`).
+  default check-level tests (`tests/configs/test_configspec.py`).
 - GPU smoke (`uv run pytest -m slow`) is opt-in and needs a real engine env; CI does
   not require it.
 

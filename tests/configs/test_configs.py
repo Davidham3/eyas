@@ -2,7 +2,7 @@
 
 The per-cell YAMLs are retired: the shipped surface is configs/spec, and each
 cell's effective config is the assembler's product (golden parity pinned by
-tests/test_configspec.py; the shared accessor tests/support/spec_cells.py states the
+tests/configs/test_configspec.py; the shared accessor tests/support/spec_cells.py states the
 cell set). For every shipped run config — every spec cell (board x method grid
 + available mirrors) plus the standalone configs/tutorial_shapes.yaml — where
 "shipped" means strategy section present, no optimizer section, validate:
@@ -36,7 +36,7 @@ from eyas.engine.runtime import load_config
 from tests.support.spec_cells import cell, cell_text, shipped_cells
 from tests.support.spec_cells import cell_id as make_cell_id
 
-_ROOT = Path(__file__).resolve().parents[1]
+_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _bind(section: dict, group: str) -> tuple[type, object]:
@@ -274,7 +274,7 @@ def test_story_openai_configs_bind_the_real_backend_signature(
     cid, path = target
     cfg = _load(path) if path is not None else cell(*_split_cell_id(cid))
     assert cfg["backend"]["name"] == "openai", f"{cid}: story config must use the openai backend"
-    # the docs-run machinery (tests/test_tutorials.py RUN_STUB) executes these
+    # the docs-run machinery (tests/docs/test_tutorials.py RUN_STUB) executes these
     # configs verbatim against the stub server — the URL literal is its contract
     assert cfg["backend"]["params"]["base_url"] == "http://localhost:8000/v1", (
         f"{cid}: docs-run configs must carry the canonical stub URL literal"
@@ -317,7 +317,7 @@ def test_protegi_configs_run_the_bandit_selector(cell_id: str, cfg: dict) -> Non
 # is simply never consumed (the configurator fixes the config; the runtime
 # never shrinks a configured value). The quickstart quota is the cells/
 # exception for <ds>/protegi; bench-scale quotas are the benchmark combos
-# (bound in tests/test_matrix_configs.py).
+# (bound in tests/configs/test_matrix_configs.py).
 _QUICKSTART_BANDIT_PLAN: dict[str, tuple[int, int, int]] = {
     # dataset -> (split n, eval_rounds, samples_per_eval)
     "pets": (74, 8, 9),
@@ -367,7 +367,7 @@ def test_quickstart_bandit_cells_pin_the_toy_split_exact_plan(cell_id: str, cfg:
 # back to the single [task.default_prompt] and fail at the first GA round, so
 # init guards the assembled pool. The pools are dataset-owned prompt assets in
 # datasets.yaml; bench-scale cells carry the same asset through the benchmark
-# expansion (bound in tests/test_matrix_configs.py).
+# expansion (bound in tests/configs/test_matrix_configs.py).
 
 
 @pytest.mark.parametrize(

@@ -26,7 +26,7 @@ fidelity notes kept beside the facts they explain — stripped from the assembly
 output, rendered back into ``gen-configs`` file headers.
 
 The assembly output is byte-for-byte the effective config the deleted
-per-cell YAMLs carried (golden parity, ``tests/test_configspec.py``); the
+per-cell YAMLs carried (golden parity, ``tests/configs/test_configspec.py``); the
 runtime strict validator (``eyas.engine.runtime.load_config`` semantics)
 remains the only source of validity — this module assembles, never invents.
 """
@@ -357,7 +357,7 @@ def cell_config(
 ) -> dict[str, Any]:
     """The effective config of one quickstart cell, assembled layer by layer.
     Byte-for-byte the dict the committed per-cell YAML carried (golden parity
-    is the contract; see ``tests/test_configspec.py``)."""
+    is the contract; see ``tests/configs/test_configspec.py``)."""
     if variant is not None and variant not in spec.variants:
         raise ValueError(f"unknown variant {variant!r} (known: {sorted(spec.variants)})")
     if method not in spec.methods:
@@ -433,7 +433,7 @@ def cell_digest(config: Mapping[str, Any]) -> str:
     """Canonical sha256 digest of one assembled cell — the identity the
     golden manifests key on. ``sort_keys`` keeps dict insertion order out of
     the digest, ``ensure_ascii=False`` pins the escaping policy, and floats
-    go through CPython ``repr`` (known-value test: ``tests/test_configspec.py``)."""
+    go through CPython ``repr`` (known-value test: ``tests/configs/test_configspec.py``)."""
     payload = json.dumps(config, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 

@@ -11,7 +11,7 @@ Inventory under test (messages carry counts/elapsed only — never payloads):
 - MediaPrefetchLoader: batch load start/done with counts (prefetch.py)
 - The breadcrumbs bump the watchdog source on their own (zero-log ≠ hang proof)
 
-Capture reuses the established pattern from tests/test_backends_scheduling.py:
+Capture reuses the established pattern from tests/backends/test_backends_scheduling.py:
 the "eyas" logger is propagate=False with a queue handler, so the fixture
 force-enables propagation and lowers the level to DEBUG.
 """
@@ -456,7 +456,7 @@ async def test_compare_fanout_breadcrumb(eyas_debug_logs) -> None:
 
 # ---------------------------------------------------------------------------
 # prefetch breadcrumbs (fast tier: stdlib-built PNG; same shape as
-# tests/test_backends_prefetch.py)
+# tests/backends/test_backends_prefetch.py)
 # ---------------------------------------------------------------------------
 def _png_bytes(width: int = 2, height: int = 2) -> bytes:
     import struct

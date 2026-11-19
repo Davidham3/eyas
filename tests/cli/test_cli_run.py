@@ -345,8 +345,8 @@ def test_report_dispatch_prints_table(
 # the spec_sha stamp, expansion plumbing, and the generated-file contract.
 
 
-_SPEC_DIR = Path(__file__).resolve().parents[1] / "configs" / "spec"
-_GOLDEN = Path(__file__).resolve().parents[1] / "tests" / "goldens" / "configspec"
+_SPEC_DIR = Path(__file__).resolve().parents[2] / "configs" / "spec"
+_GOLDEN = Path(__file__).resolve().parents[2] / "tests" / "goldens" / "configspec"
 _GOLDEN_CELLS = _GOLDEN / "cells"
 _QUICKSTART_MANIFEST = _GOLDEN / "quickstart.sha256"
 

@@ -34,7 +34,7 @@ import pytest
 
 from tests.support.stub_openai_server import StubOpenAIServer
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 _DOC_FILES = sorted((REPO / "docs" / "tutorials").glob("*.md")) + [REPO / "README.md"]
 
 # key = "<file-stem>#<block-index-in-order>". Keep the maps disjoint and
@@ -54,16 +54,16 @@ FAIL: dict[str, str] = {
 SKIP: dict[str, str] = {
     "getting-started#0": "git clone of the public repo https://github.com/Davidham3/eyas.git: needs network, skipped (install walkthrough)",
     "getting-started#1": "downloads TextVQA images (5001-question labeled val pool, ~3 parquet shards of ~310 MB)",
-    "getting-started#2": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/test_configs.py, story numbers from the recorded fresh OpenAI-endpoint run on the page",
-    "getting-started#3": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/test_configs.py, story numbers from the recorded fresh OpenAI-endpoint run on the page",
-    "first-optimization#0": "assembled story cells need TextVQA data + user-supplied OpenAI endpoint; the same two commands are classified at getting-started#2/#3 and the config shapes are pinned by tests/test_configs.py",
+    "getting-started#2": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/configs/test_configs.py, story numbers from the recorded fresh OpenAI-endpoint run on the page",
+    "getting-started#3": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/configs/test_configs.py, story numbers from the recorded fresh OpenAI-endpoint run on the page",
+    "first-optimization#0": "assembled story cells need TextVQA data + user-supplied OpenAI endpoint; the same two commands are classified at getting-started#2/#3 and the config shapes are pinned by tests/configs/test_configs.py",
     "first-optimization#1": "gen-configs export of the story cell, cp'd to a reader-authored your_hill_climb.yaml (walkthrough placeholder, not a tree artifact)",
     "first-optimization#2": "your_hill_climb.yaml: placeholder authored during the walkthrough (needs endpoint + TextVQA data)",
     "first-optimization#3": "DEBUG/status example over the placeholder your_hill_climb.yaml",
     "custom-method#0": "rs_demo.yaml is reader-authored in the custom-method tutorial; the shipped equivalent (examples/strategy_skeleton) is pytest-gated there",
     "custom-task#0": "my_config.yaml: placeholder authored during the walkthrough",
-    "understanding-results#0": "exp.yaml: placeholder; --resume fidelity is pinned by tests/test_resume.py",
-    "understanding-results#1": "exp.yaml: placeholder; --set semantics are pinned by tests/test_runtime_plugins.py",
+    "understanding-results#0": "exp.yaml: placeholder; --resume fidelity is pinned by tests/runs/test_resume.py",
+    "understanding-results#1": "exp.yaml: placeholder; --set semantics are pinned by tests/configs/test_runtime_plugins.py",
     "understanding-results#2": "illustrative run-dir path from a user's own outputs/",
     "benchmark#0": "installs the vllm extra and downloads datasets — CI jobs do this on the GPU tier only",
     "benchmark#1": "quickstart cell needs model weights + dataset (GPU tier)",
@@ -71,10 +71,10 @@ SKIP: dict[str, str] = {
     "benchmark#3": "gen-configs export + sweep over GPU-tier cells",
     "benchmark#4": "benchmark-spec sweep: GPU-tier assembled cells + real weights path via --set",
     "benchmark#5": "reports over outputs/ produced by benchmark#1..4 (GPU tier)",
-    "guided-tour#4": "reads the run dirs produced by guided-tour#0/#3 (cross-block state); the multi-run report shape is pinned by tests/test_runtime.py and the pasted table comes from a real stub-server execution",
-    "guided-tour#6": "the published-cell address runs real data + real weights (GPU tier); the assembled pets/raw cell is golden-pinned by tests/test_configspec.py",
+    "guided-tour#4": "reads the run dirs produced by guided-tour#0/#3 (cross-block state); the multi-run report shape is pinned by tests/engine/test_runtime.py and the pasted table comes from a real stub-server execution",
+    "guided-tour#6": "the published-cell address runs real data + real weights (GPU tier); the assembled pets/raw cell is golden-pinned by tests/configs/test_configspec.py",
     "README#0": "git clone of the public repo https://github.com/Davidham3/eyas.git: needs network, skipped; uv sync is an environment install",
-    "README#1": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/test_configs.py",
+    "README#1": "downloads TextVQA images + user-supplied OpenAI endpoint; config shape pinned by tests/configs/test_configs.py",
 }
 
 # documented stderr signatures for the FAIL blocks
@@ -117,7 +117,7 @@ def test_classification_is_complete_and_disjoint():
     classified = set(RUN) | set(SKIP) | set(FAIL) | set(RUN_STUB)
     assert keys == classified, (
         "every ```bash block in docs/tutorials/*.md and README.md must be classified "
-        f"in tests/test_tutorials.py — unclassified: {sorted(keys - classified)}, "
+        f"in tests/docs/test_tutorials.py — unclassified: {sorted(keys - classified)}, "
         f"stale entries: {sorted(classified - keys)}"
     )
     maps = [RUN, SKIP, FAIL, RUN_STUB]

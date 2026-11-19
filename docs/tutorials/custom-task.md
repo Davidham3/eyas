@@ -185,7 +185,7 @@ def test_polarity_roundtrip(tmp_path):
     assert task.score(prediction, sample) == {"accuracy": 1.0}
 ```
 
-For the evaluator-level contract, `tests/conftest.py` ships `make_evaluator(task, backend, protocol, produces)`, the standard evaluator assembly (planner + absolute scoring) the framework's own task suites ride on. Then point the config's `backend` section at that scripted test backend (its registry name is in the `eyas list` tour of [Getting started](getting-started.md)) and run it: if the loop completes and `result.json` appears, your task composes with evaluation, record caching and the strategy.
+For the evaluator-level contract, `tests/support/engine.py` ships `make_evaluator(task, backend, protocol, produces)`, the standard evaluator assembly (planner + absolute scoring) the framework's own task suites ride on. Then point the config's `backend` section at that scripted test backend (its registry name is in the `eyas list` tour of [Getting started](getting-started.md)) and run it: if the loop completes and `result.json` appears, your task composes with evaluation, record caching and the strategy.
 
 ## Next steps
 

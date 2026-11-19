@@ -21,7 +21,7 @@ system whitespace.
 Run from the repo root with a venv carrying transformers (the fast tier
 deselects this module via the ``slow`` marker):
 
-    <venv>/bin/python -m pytest tests/test_renderer_goldens.py -m slow
+    <venv>/bin/python -m pytest tests/configs/test_renderer_goldens.py -m slow
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ import pytest
 from eyas.backends.base import ImagePart, Message, TextPart
 from eyas.backends.profiles import HfTemplateProfile
 
-GOLDEN_DIR = Path(__file__).resolve().parent / "golden" / "qwen35_template"
+GOLDEN_DIR = Path(__file__).resolve().parents[1] / "golden" / "qwen35_template"
 MODEL_PATH = os.environ.get("EYAS_QWEN35_MODEL_PATH", "")
 THINKING_KWARG = "enable_thinking"
 

@@ -123,7 +123,7 @@ def test_ape_induction_conditions_on_input_output_pairs():
         assert "q1" in text and "q2" in text
         # ToyMCQ renders text only, so the base Task hook attaches no media: demo
         # lines are plain "Input: <question>" (the [Image k] form is pinned in
-        # tests/test_strategy_ape.py against a real McqTask).
+        # tests/strategies/test_strategy_ape.py against a real McqTask).
         assert "[Image" not in text
 
 

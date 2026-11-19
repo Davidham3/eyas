@@ -60,7 +60,7 @@ def test_prepare_main_parser_requires_dataset(monkeypatch):
 
 
 def test_historical_script_shim_delegates_to_package():
-    path = Path(__file__).resolve().parents[1] / "scripts" / "prepare_quickstart_data.py"
+    path = Path(__file__).resolve().parents[2] / "scripts" / "prepare_quickstart_data.py"
     spec = importlib.util.spec_from_file_location("prepare_quickstart_shim", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

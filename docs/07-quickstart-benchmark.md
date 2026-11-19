@@ -108,7 +108,7 @@ placeholder inside the config).
   (flat = parameterless, pinned with empty params; bandit = all four
   constructor parameters: `eval_rounds`/`samples_per_eval`/`c`/`keep_top`). No
   run's effective budget rides on an implicit constructor default
-  (scan: `tests/test_configs.py`). Note for the bandit cells (**config is
+  (scan: `tests/configs/test_configs.py`). Note for the bandit cells (**config is
   law**): the runtime executes the configured window plan exactly and
   never rewrites a configured value; a pull starting at or beyond the split end
   fails fast with a `ValueError` carrying the arithmetic **and both remediation
@@ -125,7 +125,7 @@ placeholder inside the config).
   D7/D8). The quickstart bases' budget block is inherited into every bench-scale
   cell through the matrix spec's base template, and the spec's bandit combos pin
   the bench caps explicitly (`32`/`32`/`31`/`31`), so toy-sized caps can never leak
-  into the bench cells (bound in `tests/test_matrix_configs.py`).
+  into the bench cells (bound in `tests/configs/test_matrix_configs.py`).
 - **E3 cost profile**: wall / request count incl. the judge channel / input tokens
   (vllm arm, seed 42; see §5). Request counts cover
   evaluation + judge + optimizer generation requests passing the planner chokepoint;

@@ -4,7 +4,7 @@ The goldens are the template-owned rendering truth: every case is rendered ONCE
 directly through ``AutoTokenizer.apply_chat_template`` with the chat template
 shipped alongside the weights (the same path ``HfTemplateProfile`` uses at
 inference time), and the exact rendered bytes are checked in. The slow-tier
-test (tests/test_renderer_goldens.py) re-renders through the repo's profile
+test (tests/configs/test_renderer_goldens.py) re-renders through the repo's profile
 with the real tokenizer and diffs byte-for-byte: the digest equality is the
 gate. The stamp (transformers version + chat_template.jinja sha256) is
 provenance — template-bytes drift fails the test, a transformers version

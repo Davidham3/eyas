@@ -18,7 +18,7 @@ pre-exist; a matrix bundle is a *recipe fragment authored against a template*,
 so intermediate mappings are created on descent, a mapping value REPLACES the
 target leaf (dict-valued leaves are the explicit-replacement tool — e.g.
 swapping a whole ``profile``), and a ``null`` value deletes the key. The
-spec's binding test (``tests/test_matrix_configs.py``: expansion shape +
+spec's binding test (``tests/configs/test_matrix_configs.py``: expansion shape +
 equivalence of the published cells) is this freedom's counterpart guard.
 """
 

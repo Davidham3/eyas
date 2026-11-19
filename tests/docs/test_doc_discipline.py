@@ -18,7 +18,7 @@ import ast
 import re
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 
 _PATH_TOKEN = re.compile(
     r"(?<![\w/.-])(?:src|tests|configs|scripts|docs|examples)/[A-Za-z0-9_./-]*[A-Za-z0-9_]"

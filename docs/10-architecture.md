@@ -225,7 +225,7 @@ per tier. The **judging channel is the deliberate exception**: `JudgeContext`
 sampling is pinned greedy (temperature 0, no seed/thinking). A verdict that
 rode the run's seed or thinking setting would make relative scoring itself
 irreproducible, so pinning is a methodological requirement, not a waiver
-(pinned by tests/test_planner_channel.py: two runs with different deployment
+(pinned by tests/engine/test_planner_channel.py: two runs with different deployment
 seed/thinking produce byte-identical judging requests).
 
 ## 7. Single chokepoint for resources and context (RequestPlanner)
@@ -273,7 +273,7 @@ requests and SROIE large images blowing the window all hit this one guard rail.
   at the planner.
 - A planner-rejected JUDGE verdict is unbilled: `McqLLMJudge` returns
   `Verdict(decided=False, usage=None)` on the rejection response: a request
-  that never left the process enters no cost profile (tests/test_planner_channel.py).
+  that never left the process enters no cost profile (tests/engine/test_planner_channel.py).
 
 ## 8. New optimizer contract: managed loop + typed step
 

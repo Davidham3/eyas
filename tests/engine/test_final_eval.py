@@ -79,6 +79,6 @@ def test_report_prefix_follows_the_configured_split(tmp_path):
 
 
 # The compare-semantics skip path (compare runs never re-evaluate on the final
-# split) is pinned in tests/test_contract.py::
+# split) is pinned in tests/contract/test_core.py::
 # test_compare_only_fixture_runs_on_compare_task — it needs a compare-capable
 # strategy, which only the assembly fixture provides.

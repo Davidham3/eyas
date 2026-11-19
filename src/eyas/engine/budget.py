@@ -239,7 +239,7 @@ class BanditBudget:
         quantities (sample quantities belong to the configurator).
 
         This runtime guard is the static-check substitute for a config scan
-        (tests/test_configs.py can validate allocator pinning but not window
+        (tests/configs/test_configs.py can validate allocator pinning but not window
         feasibility: split sizes are runtime facts of the task data, not config keys —
         so a knob edit that arms window exhaustion is caught only when the arithmetic
         is actually attempted)."""

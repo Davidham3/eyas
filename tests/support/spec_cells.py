@@ -2,7 +2,7 @@
 
 The committed per-cell YAMLs are retired (E2): the cell set is the config
 spec's cross product, and a cell's effective config is ``cell_config`` — the
-same assembly the golden-parity suite (tests/test_configspec.py) pins. Tests
+same assembly the golden-parity suite (tests/configs/test_configspec.py) pins. Tests
 that used to read ``configs/quickstart_<cell>.yaml`` load through here, so
 "what ships" is stated once.
 """

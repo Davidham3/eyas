@@ -33,7 +33,7 @@ from eyas.tasks.demo_shapes import (
 from eyas.tasks.protocol import IdentityProtocol
 from eyas.tasks.vqa import normalize_vqa_answer
 
-_REPO = Path(__file__).resolve().parents[1]
+_REPO = Path(__file__).resolve().parents[2]
 
 _COLOR_Q = "What color is this shape?"
 _SHAPE_Q = "What shape is this?"
@@ -245,7 +245,7 @@ class TestShapesExtension:
             DemoShapesTask(image_dir=str(tmp_path / "imgs"), shapes=("triangle",))
 
     def test_vqa_demo_config_binds_and_runs(self, tmp_path):
-        # the auto-parametrized tests/test_configs.py family validates binding for
+        # the auto-parametrized tests/configs/test_configs.py family validates binding for
         # every configs/*.yaml; this pins the VQA demo's end-to-end numbers on tmp dirs
         config = load_config(_REPO / "tests" / "fixtures" / "demo_vqa.yaml")
         config["task"]["params"]["image_dir"] = str(tmp_path / "imgs")

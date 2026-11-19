@@ -162,7 +162,7 @@ def check_config(cfg: dict[str, Any], origin: str) -> list[str]:
 
 
 def _is_run_config(cfg: dict[str, Any]) -> bool:
-    """Per-run config shape (mirrors ``tests/test_configs.py:_is_run_config``):
+    """Per-run config shape (mirrors ``tests/configs/test_configs.py:_is_run_config``):
     a run config carries ``strategy`` (no legacy ``optimizer``) plus ``run``.
     Anything else — e.g. a sweep spec with ``base``/``set``/``axes`` — is not
     a run config and must not go through the run-section checks."""

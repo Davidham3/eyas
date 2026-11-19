@@ -4,7 +4,7 @@ NExT-QA video MCQ).
 Each board ships the same 8 method cells as the image/text boards, so the cell
 set, the task shape per board, the judge policy, the OPRO instruction position
 and the seeded-pool conventions are pinned here rather than re-derived from the
-spec (``tests/test_configs.py`` covers binding for every cell).
+spec (``tests/configs/test_configs.py`` covers binding for every cell).
 """
 
 import pytest
