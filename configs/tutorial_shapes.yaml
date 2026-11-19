@@ -1,0 +1,48 @@
+# Docs-tutorial profile: the loop-mechanics tour
+# of one run, on the built-in zero-data demo_shapes task against an
+# OpenAI-compatible endpoint. base_url/model/api key are canonical
+# placeholders — replace base_url (any OpenAI-compatible chat-completions
+# endpoint) and point api_key_env at your key's env var to follow the tour for
+# real. Metrics here carry no algorithmic meaning; the run dir's artifacts are
+# the lesson.
+#
+# Run: uv run eyas run --config configs/tutorial_shapes.yaml --output-dir outputs/eyas_tour
+# Status: uv run eyas status outputs/eyas_tour
+run:
+  name: tutorial_shapes
+  seed: 42
+
+task:
+  name: demo_shapes   # built-in zero-data task: auto-generates solid-color square PNGs
+  params: {}
+
+protocol:
+  name: identity
+
+backend:
+  name: openai
+  params:
+    base_url: http://localhost:8000/v1
+    model: qwen3.5-9b
+    api_key_env: EYAS_DOC_STUB_KEY
+    max_inflight: 16
+  sampling:
+    thinking: false
+
+eval_model:
+  name: absolute      # absolute scoring (accuracy); task objective can produce it -> assembly validation passes
+
+budget:
+  name: flat
+  params: {}  # FlatBudget is parameterless: every candidate, full split (explicit pin)
+
+# Sampling tiers (optional): algorithm-facing knobs only -- thinking/seed always
+# come from backend.sampling (the deployment layer)
+sampling_profiles:
+  generate: { temperature: 0.9, max_new_tokens: 512 }
+
+strategy:
+  name: cot           # degenerate method: the CoT identity lands in the rendered prompt text
+  params:
+    base_prompt: "What color is the square? Answer with one color name."
+    cot_suffix: "Let's think step by step."

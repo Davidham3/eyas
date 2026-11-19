@@ -1,0 +1,103 @@
+# The eight published methods: algorithm identity only. strategy carries the
+# method-uniform identity; what a method patches ONTO a dataset is gated by the
+# dataset's kind (mcq / math_qa / vqa / kie) — a patch a task does not implement
+# is never applied (e.g. MathQaTask renders a fixed Question/Answer skeleton and
+# takes no instruction_pos; the kie/vqa boards score rule-based and carry no
+# judge for any family). Dataset-owned prompt payloads (cot base prompts,
+# EvoPrompt N_P=10 pools, SPO templates, raw seed pins) live in datasets.yaml.
+
+methods:
+  raw:
+    why: |
+      Raw baseline (strategy-section form). Seeds fall back to the task's
+      default prompt; datasets that ship an explicit seed pin (cub, nextqa)
+      repeat the task default so a controlled arm can --set it.
+    strategy: { name: raw, params: {} }
+
+  cot:
+    why: |
+      CoT baseline. The CoT mechanism rides the task-level assistant_prefix
+      continuation (mcq boards) + the candidate prompt; the cot render layer
+      leaves cot_suffix empty, so candidate text = the task's default prompt.
+      The rule-scored boards (numeric exact match / soft accuracy / KIE fields)
+      need no judge; the MCQ boards select through the CoT judge variant.
+    strategy: { name: cot, params: {} }
+    task_patch:
+      mcq: { task.params.assistant_prefix: "Let's think step by step." }
+      math_qa: { task.params.assistant_prefix: "Let's think step by step." }
+    judge:
+      mcq: { name: mcq_llm, params: { variant: cot, classify_original_task: true } }
+
+  hill_climb:
+    why: |
+      hill_climb at R3·K3·P2 (the framework defaults are R2·K2·P2). Scoring
+      rides the task channel; the MCQ boards add the default-variant judge.
+    strategy: { name: hill_climb, params: { keep_size: 3, per_parent: 2, rounds: 3 } }
+    judge:
+      mcq: { name: mcq_llm, params: { variant: default } }
+
+  evoprompt:
+    why: |
+      EvoPrompt GA (rounds=3, popsize=10). The initial pool loads directly via
+      strategy.seeds — the official N_P=10 pool: 10 curated, distinct English
+      seed prompts per dataset (a datasets/ prompt asset), evaluated in full and
+      truncated to popsize. A cell without the pool would fall back to the
+      single task default prompt and fail at the first GA round.
+    strategy: { name: evoprompt, params: { mode: ga, popsize: 10, rounds: 3 } }
+    judge:
+      mcq: { name: mcq_llm, params: { variant: cot, classify_original_task: true } }
+
+  opro:
+    why: |
+      OPRO meta-prompt optimization (rounds=4): trajectory-guided search over
+      (instruction, score) history. MCQ boards must set instruction_pos=Q_begin
+      (the scorer position); MathQaTask takes no OPRO scorer position, so the
+      patch is kind-gated and math task params stay data-only.
+    strategy: { name: opro, params: { rounds: 4 } }
+    task_patch:
+      mcq: { task.params.instruction_pos: Q_begin }
+    judge:
+      mcq: { name: mcq_llm, params: { variant: opro, classify_original_task: true } }
+
+  ape:
+    why: |
+      APE (generates num_candidates=4 in one shot and evaluates the whole pool,
+      keeping top1; the demo sampling count uses the defaults). The demo hook
+      attaches demos_per_prompt=2 images per request, so the engine needs the
+      limit_mm_per_prompt.image=2 cap (assembly intersects the declared profile
+      with the engine limit). Demo media is governed by the task's demo hook,
+      per board.
+    strategy: { name: ape, params: {} }
+    backend_patch: { backend.params.engine_kwargs.limit_mm_per_prompt: { image: 2 } }
+    judge:
+      mcq: { name: mcq_llm, params: { variant: opro, classify_original_task: true } }
+
+  protegi:
+    why: |
+      ProTeGi (rounds=3, beam 4; expansion = critique/edit dialogue + synonym
+      paraphrase per Algorithm 2 with the paper's fanout defaults). Selection
+      runs the bandit selector — a flat budget is only the paper's opt-in
+      "Unif" comparator — so this method switches the budget section to bandit
+      with the paper's UCB knobs. samples_per_eval is a split fact: the
+      quickstart toys pin floor(n/8) per cells/, the bench-scale combo caps fit
+      the published splits (see benchmark.yaml combos).
+    strategy: { name: protegi, params: { beam_size: 4, n_gradients: 4, rounds: 3 } }
+    budget: { name: bandit, params: { eval_rounds: 8, c: 2.0, keep_top: 0.5 } }
+    judge:
+      mcq: { name: mcq_llm, params: { variant: default } }
+
+  spo:
+    why: |
+      SPO (rounds=20). The eval_model absolute ledger + final_eval pass come
+      from defaults; the SELECTION signal is SPO's own reference-free
+      one-vs-one answer ballots — Decision(items) pair evaluation judged by
+      AnswerPairwiseJudge, no gold, ABBA — riding the evaluate rounds, not a
+      task judge. Single-incumbent: only seeds[0] is used, so the dataset asset
+      ships complete templates ({markers} whose payload the sample lacks simply
+      vanish). prompt_includes_choices gates the offspring backfill that would
+      append a choices placeholder — the gsm8k asset turns it off (math QA has
+      no choice list).
+    strategy: { name: spo, params: { rounds: 20 } }
+    task_patch:
+      mcq: { task.params.raw_template: true }
+      math_qa: { task.params.raw_template: true }

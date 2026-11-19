@@ -1,0 +1,51 @@
+{
+  "backend": {
+    "name": "vllm",
+    "params": {
+      "engine_kwargs": {
+        "enable_prefix_caching": false,
+        "enforce_eager": true,
+        "limit_mm_per_prompt": {
+          "image": 2
+        },
+        "max_num_batched_tokens": 16384,
+        "max_num_seqs": 512
+      },
+      "max_inflight": 512,
+      "model_path": "/path/to/Qwen3.5-9B",
+      "prefetch_workers": 8,
+      "profile": {
+        "thinking_kwarg": "enable_thinking",
+        "type": "hf_template"
+      }
+    }
+  },
+  "budget": {
+    "name": "flat",
+    "params": {}
+  },
+  "eval_model": {
+    "name": "absolute"
+  },
+  "protocol": {
+    "name": "identity"
+  },
+  "run": {
+    "final_eval": {
+      "split": "test"
+    },
+    "name": "quickstart_textvqa_ape",
+    "seed": 42
+  },
+  "strategy": {
+    "name": "ape",
+    "params": {}
+  },
+  "task": {
+    "name": "vqa",
+    "params": {
+      "data_dir": "datasets/quickstart/textvqa/data",
+      "images_dir": "datasets/quickstart/textvqa/images"
+    }
+  }
+}

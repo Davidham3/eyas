@@ -1,0 +1,89 @@
+# Per-cell exceptions (dotted-path overrides over the assembled
+# defaults+dataset+method layers; the delete marker is null) and the openai
+# variant: its definition, the availability list (which cells ship a mirror),
+# and per-cell mirror exceptions.
+cells:
+  pets/protegi:
+    why: 'quickstart toy split n=74: the bandit selector pins samples_per_eval=9 = floor(74/8) so
+      all 8 configured pulls serve real windows (eval_rounds stays 8 — paper structure).'
+    set:
+      budget.params.samples_per_eval: 9
+  cub/protegi:
+    why: 'quickstart toy split n=110: the bandit selector pins samples_per_eval=13 = floor(110/8)
+      so all 8 configured pulls serve real windows (eval_rounds stays 8 — paper structure).'
+    set:
+      budget.params.samples_per_eval: 13
+  sroie/protegi:
+    why: 'quickstart toy split n=100: the bandit selector pins samples_per_eval=12 = floor(100/8)
+      so all 8 configured pulls serve real windows (eval_rounds stays 8 — paper structure).'
+    set:
+      budget.params.samples_per_eval: 12
+  textvqa/protegi:
+    why: 'quickstart toy split n=100: the bandit selector pins samples_per_eval=12 = floor(100/8)
+      so all 8 configured pulls serve real windows (eval_rounds stays 8 — paper structure).'
+    set:
+      budget.params.samples_per_eval: 12
+  gsm8k/protegi:
+    why: 'quickstart toy split n=100: the bandit selector pins samples_per_eval=12 = floor(100/8)
+      so all 8 configured pulls serve real windows (eval_rounds stays 8 — paper structure).'
+    set:
+      budget.params.samples_per_eval: 12
+  nextqa/protegi:
+    why: 'quickstart toy split n=100: the bandit selector pins samples_per_eval=12 = floor(100/8)
+      so all 8 configured pulls serve real windows (eval_rounds stays 8 — paper structure).'
+    set:
+      budget.params.samples_per_eval: 12
+  mixed/protegi:
+    why: 'quickstart toy split n=28: the bandit selector pins samples_per_eval=3 = floor(28/8) so
+      all 8 configured pulls serve real windows (eval_rounds stays 8 — paper structure).'
+    set:
+      budget.params.samples_per_eval: 3
+variants:
+  openai:
+    why: |-
+      OpenAI-compatible mirror of selected quickstart cells — the E1
+      backend-parity arms and the docs story profile. The backend section
+      is REPLACED wholesale: an HTTP endpoint renders server-side, so the
+      vllm params (model_path/profile/prefetch/engine_kwargs) have no
+      counterpart, and sampling pins thinking off. max_inflight 16 is the
+      HTTP window (vs 512 in-process). base_url/model/api_key_env are
+      placeholders: point them at your endpoint via --set (api key via the
+      env var named in api_key_env). The availability list records exactly
+      which arms were measured; do not extend it casually.
+    backend:
+      name: openai
+      params:
+        base_url: https://your-openai-compatible-endpoint/v1/
+        model: your-vlm-model
+        api_key_env: EYAS_API_KEY
+        max_inflight: 16
+      sampling:
+        thinking: false
+    available:
+    - pets/raw
+    - pets/cot
+    - cub/raw
+    - cub/cot
+    - sroie/raw
+    - sroie/cot
+    - textvqa/raw
+    - textvqa/opro
+    overrides:
+      textvqa/raw:
+        why: 'docs story profile: the local `vllm serve` stand-in with the stub key.'
+        set:
+          backend.params.base_url: http://localhost:8000/v1
+          backend.params.model: qwen3.5-9b
+          backend.params.api_key_env: EYAS_DOC_STUB_KEY
+      textvqa/opro:
+        why: 'docs story profile: the local `vllm serve` stand-in with the stub key.'
+        set:
+          backend.params.base_url: http://localhost:8000/v1
+          backend.params.model: qwen3.5-9b
+          backend.params.api_key_env: EYAS_DOC_STUB_KEY
+      cub/raw:
+        why: |-
+          shipped mirror exception: no raw seed pin (the task default prompt
+          is the seed text); carried verbatim for golden parity.
+        set:
+          strategy.seeds: null

@@ -66,13 +66,20 @@ def test_load_rejects_unknown_top_level_key(spec_dir: Path) -> None:
         load_matrix_spec(path)
 
 
-def test_load_requires_base_run_name_axes(spec_dir: Path) -> None:
-    for missing in ("base", "run_name", "axes"):
+def test_load_requires_run_name_axes_base_is_optional(spec_dir: Path) -> None:
+    for missing in ("run_name", "axes"):
         body = {"base": "b", "run_name": "n", "axes": {"m": ["x"]}}
         del body[missing]
         path = _write_spec(spec_dir, body)
         with pytest.raises(ValueError, match=f"missing required key {missing!r}"):
             load_matrix_spec(path)
+    # base may be absent (assembled cells need no file pattern) — but the
+    # file-based default resolver then fails fast at expansion time
+    path = _write_spec(spec_dir, {"run_name": "n", "axes": {"m": ["x"]}})
+    baseless = load_matrix_spec(path)
+    assert baseless.base is None
+    with pytest.raises(ValueError, match="no base pattern"):
+        expand_matrix(baseless, resolve_base=None)
 
 
 def test_load_rejects_empty_axis_and_bad_bundle_keys(spec_dir: Path) -> None:

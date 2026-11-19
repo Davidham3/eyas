@@ -1,0 +1,44 @@
+{
+  "backend": {
+    "name": "openai",
+    "params": {
+      "api_key_env": "EYAS_API_KEY",
+      "base_url": "https://your-openai-compatible-endpoint/v1/",
+      "max_inflight": 16,
+      "model": "your-vlm-model"
+    },
+    "sampling": {
+      "thinking": false
+    }
+  },
+  "budget": {
+    "name": "flat",
+    "params": {}
+  },
+  "eval_model": {
+    "name": "absolute"
+  },
+  "protocol": {
+    "name": "identity"
+  },
+  "run": {
+    "final_eval": {
+      "split": "test"
+    },
+    "name": "quickstart_pets_raw_openai",
+    "seed": 42
+  },
+  "strategy": {
+    "name": "raw",
+    "params": {}
+  },
+  "task": {
+    "name": "mcq",
+    "params": {
+      "data_dir": "datasets/quickstart/pets/data",
+      "dataset": "pets",
+      "images_dir": "datasets/quickstart/pets/images",
+      "train_per_group": 0
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "backend": {
+    "name": "vllm",
+    "params": {
+      "engine_kwargs": {
+        "enable_prefix_caching": false,
+        "enforce_eager": true,
+        "max_num_batched_tokens": 16384,
+        "max_num_seqs": 512
+      },
+      "max_inflight": 512,
+      "model_path": "/path/to/Qwen3.5-9B",
+      "prefetch_workers": 8,
+      "profile": {
+        "thinking_kwarg": "enable_thinking",
+        "type": "hf_template"
+      }
+    }
+  },
+  "budget": {
+    "name": "flat",
+    "params": {}
+  },
+  "eval_model": {
+    "name": "absolute"
+  },
+  "judge": {
+    "name": "mcq_llm",
+    "params": {
+      "classify_original_task": true,
+      "variant": "cot"
+    }
+  },
+  "protocol": {
+    "name": "identity"
+  },
+  "run": {
+    "final_eval": {
+      "split": "test"
+    },
+    "name": "quickstart_mixed_cot",
+    "seed": 42
+  },
+  "strategy": {
+    "name": "cot",
+    "params": {
+      "base_prompt": "Answer the question about the given sample.",
+      "cot_suffix": ""
+    }
+  },
+  "task": {
+    "name": "mixed_mcq",
+    "params": {
+      "assistant_prefix": "Let's think step by step.",
+      "data_dir": "datasets/bench/mixed/data"
+    }
+  }
+}

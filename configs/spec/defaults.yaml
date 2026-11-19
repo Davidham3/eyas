@@ -1,0 +1,37 @@
+# The shared assembly skeleton: the sections every quickstart cell agrees on
+# verbatim. Measured isomorphism over the 54 vllm cells: run / protocol /
+# eval_model 54/54 identical; budget flat 47/54 (the six exceptions are all
+# protegi's bandit switch, owned by methods/); backend shape 54/54 (the ape
+# image cap is a methods/ patch). Per-cell deviation lives one layer down —
+# datasets/, methods/, cells/ — never here.
+#
+# Placeholder values (model_path) are real paths at run time via
+# --set backend.params.model_path=...
+
+run:
+  seed: 42
+  final_eval:
+    split: test
+
+protocol:
+  name: identity
+
+eval_model:
+  name: absolute
+
+budget:
+  name: flat
+  params: {} # FlatBudget is parameterless: every candidate, full split (explicit pin)
+
+backend:
+  name: vllm
+  params:
+    model_path: /path/to/Qwen3.5-9B
+    profile: { type: hf_template, thinking_kwarg: enable_thinking }
+    max_inflight: 512
+    prefetch_workers: 8
+    engine_kwargs:
+      enforce_eager: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      max_num_seqs: 512

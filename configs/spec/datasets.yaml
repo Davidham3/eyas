@@ -1,0 +1,319 @@
+# Per-dataset identity: kind (the gate for method task_patch/judge sections),
+# the quickstart task section, the bench-scale directory overrides consumed by
+# benchmark.yaml's dataset axis, and the dataset-owned prompt assets (raw seed
+# pins, cot base prompts, EvoPrompt N_P=10 pools, SPO complete templates).
+datasets:
+  pets:
+    kind: mcq
+    why: |-
+      mcq breed board (McqTask, rule-scored letter match). train_per_group=0
+      disables the default per-group train cap: the quickstart toy split stays
+      whole. The MCQ selection boards add an LLM judge; the variant is owned
+      by the method family (methods.yaml).
+    task:
+      name: mcq
+      params:
+        dataset: pets
+        data_dir: datasets/quickstart/pets/data
+        images_dir: datasets/quickstart/pets/images
+        train_per_group: 0
+    bench:
+      task.params.data_dir: datasets/bench/pets/data
+      task.params.images_dir: datasets/bench/pets/images
+    prompts:
+      cot:
+        strategy.params:
+          base_prompt: Classify the content of the target image.
+          cot_suffix: ''
+      evoprompt:
+        strategy.seeds:
+        - Classify the content of the target image.
+        - Look at the pet in the image and identify its breed.
+        - Name the breed of the cat or dog shown in the photo.
+        - Determine which pet breed the image shows, choosing the option that best matches the animal's
+          appearance.
+        - Examine the animal's coat, color, and body shape, then pick the breed it belongs to.
+        - Identify the breed of this domestic pet as precisely as the options allow.
+        - This is a photo of a household pet; select the single most specific breed that fits it.
+        - Read the breed options carefully and choose the one that best describes the animal in the
+          image.
+        - What breed is this pet? Answer with the exact breed name and nothing else.
+        - Judge the pet's visible features -- fur pattern, head shape, size -- and label it with the
+          matching breed.
+      spo:
+        strategy.seeds:
+        - |-
+          {image}Classify the content of the target image.
+          Choices: [{choices}]
+          Target Image:
+        - |-
+          {image}Identify the pet breed in the target image.
+          Choices: [{choices}]
+          Target Image:
+  cub:
+    kind: mcq
+    why: |-
+      Fine-grained bird-species MCQ (McqTask); species family is the group key,
+      same train_per_group=0 whole-split pin as pets. The cub raw cell pins an
+      explicit seed (raw asset below).
+    task:
+      name: mcq
+      params:
+        dataset: cub
+        data_dir: datasets/quickstart/cub/data
+        images_dir: datasets/quickstart/cub/images
+        train_per_group: 0
+    bench:
+      task.params.data_dir: datasets/bench/cub/data
+      task.params.images_dir: datasets/bench/cub/images
+    prompts:
+      raw:
+        strategy.seeds:
+        - Classify the content of the target image.
+      cot:
+        strategy.params:
+          base_prompt: Classify the content of the target image.
+          cot_suffix: ''
+      evoprompt:
+        strategy.seeds:
+        - Classify the content of the target image.
+        - Identify the species of bird shown in the image.
+        - Name the bird species in this photograph.
+        - Study the bird's plumage, beak, and wing markings, then determine its species.
+        - Which bird species does this image depict? Weigh the field marks before answering.
+        - The image shows a single bird; pick the species whose plumage and structure match it.
+        - Tell this bird apart from its look-alikes by bill shape and wing bars, then give its species.
+        - Give the common name of the bird species in the photo, using only the provided options.
+        - 'Species-level classification: choose the single best-matching bird from the list.'
+        - Distinguish this bird from similar species by its markings and answer with its species name.
+      spo:
+        strategy.seeds:
+        - |-
+          {image}Classify the content of the target image.
+          Choices: [{choices}]
+          Target Image:
+        - |-
+          {image}Identify the bird species in the target image.
+          Choices: [{choices}]
+          Target Image:
+  sroie:
+    kind: kie
+    why: |-
+      SROIE receipt KIE (KieTask: image in, entity JSON out; rule-scored
+      field_acc / strict_acc / char_sim — zero judging for every method
+      family). The {image}/{choices} placeholders live inside the
+      dataset-owned prompt assets.
+    task:
+      name: kie
+      params:
+        data_dir: datasets/quickstart/sroie/data
+    bench:
+      task.params.data_dir: datasets/bench/sroie/data
+    prompts:
+      cot:
+        strategy.params:
+          base_prompt: '{image}Extract the following fields from this receipt image: {choices} First
+            read the image step by step (header, item rows, totals area) and reason about each field.
+            Then end your reply with a single JSON array of entity records — the JSON array must appear
+            exactly once at the very end. Output [] if none are present.'
+          cot_suffix: ''
+      evoprompt:
+        strategy.seeds:
+        - |-
+          {image}Extract the following fields from this image: {choices}
+          Respond with a JSON array of entity records. Output [] if none are present.
+        - '{image}Read this receipt and extract the following fields: {choices}. Return one JSON array
+          of entity records; output [] when nothing matches.'
+        - '{image}Locate these fields on the retail receipt -- {choices} -- and reply with a single
+          JSON array of entity records, copying each value exactly as printed.'
+        - '{image}From this receipt image, pull out the key information {choices}. End your reply
+          with a JSON array of entity records, or [] if none are found.'
+        - '{image}Transcribe the receipt''s values for {choices} as a JSON array of {"field": "value"}
+          records, preserving the printed spelling and numbers.'
+        - '{image}Inspect the receipt line by line, then output the extracted fields {choices} as
+          a single JSON array of entity records with no surrounding prose.'
+        - '{image}Extract from this receipt: {choices}. Keep dates and monetary amounts exactly as
+          shown, and return a JSON array of entity records (use [] if empty).'
+        - '{image}Detect the key fields {choices} in this invoice image and output them as a JSON
+          array of entity records; omit fields that do not appear.'
+        - '{image}For the receipt shown, extract the fields {choices}. The response must contain a
+          JSON array of entity records and nothing after it; output [] when no field is present.'
+        - '{image}Read the store name, date, address, and total from this receipt and map them onto
+          {choices}, returning the result as a JSON array of entity records or [].'
+      spo:
+        strategy.seeds:
+        - |-
+          {image}Extract the following fields from this receipt image: {choices}
+          Return a JSON array of entity records. Output [] if none are present.
+        - '{image}Read the text in this receipt image and return a JSON array of entity records with
+          the fields: {choices}. Output [] if none are present.'
+  textvqa:
+    kind: vqa
+    why: |-
+      TextVQA open-ended VQA (VqaTask): selection runs on rule-based soft
+      accuracy against the gold answer strings — no judge section, unlike the
+      MCQ boards.
+    task:
+      name: vqa
+      params:
+        data_dir: datasets/quickstart/textvqa/data
+        images_dir: datasets/quickstart/textvqa/images
+    bench:
+      task.params.data_dir: datasets/bench/textvqa/data
+      task.params.images_dir: datasets/bench/textvqa/images
+    prompts:
+      cot:
+        strategy.params:
+          base_prompt: '{image}Read the question below carefully. On the FIRST line, answer with a
+            short factual phrase (typically one to five words). Only after that line you may add a
+            brief one-sentence justification.'
+          cot_suffix: ''
+      evoprompt:
+        strategy.seeds:
+        - Answer the question about the target image with a short factual phrase (one to five words).
+        - Read the text visible in the image and answer the question briefly.
+        - Base your answer strictly on what the image shows, in a few words at most.
+        - What is the answer to the question, according to the image? Reply with a concise phrase.
+        - Look at any text, signs, or numbers in the image and give the shortest correct answer.
+        - Answer the question using only one to five words, with no extra punctuation.
+        - Find the visual clue relevant to the question and state the answer directly on the first
+          line.
+        - Answer factually and concisely; do not write full sentences.
+        - Transcribe or infer exactly what the question asks about this image and answer in a short
+          phrase.
+        - 'Keep the reply minimal: a single word or short phrase that directly answers the question.'
+      spo:
+        strategy.seeds:
+        - '{image}Answer the question about the image with a short factual phrase.'
+        - '{image}Read the image carefully and reply with the exact answer only -- one to five words,
+          no full sentence.'
+  gsm8k:
+    kind: math_qa
+    why: |-
+      GSM8K numeric math QA (MathQaTask): the final `Answer: <number>` line is
+      scored by numeric exact match — no judge, and every shipped prompt asset
+      keeps that last-line contract. Rendering is the fixed Question/Answer
+      skeleton: task params stay data-only (no instruction_pos, no choices).
+    task:
+      name: math_qa
+      params:
+        data_dir: datasets/quickstart/gsm8k/data
+    bench:
+      task.params.data_dir: datasets/bench/gsm8k/data
+    prompts:
+      cot:
+        strategy.params:
+          base_prompt: 'Solve the math problem. Show your reasoning, then write the final answer on
+            the last line exactly as `Answer: <number>`.'
+          cot_suffix: ''
+      evoprompt:
+        strategy.seeds:
+        - 'Solve the math problem. Show your reasoning, then write the final answer on the last line
+          exactly as `Answer: <number>`.'
+        - 'Work through the arithmetic step by step, then state the final number on a line of its
+          own as `Answer: <number>`.'
+        - 'Read the word problem, extract the given quantities, and compute the result; finish with
+          `Answer: <number>`.'
+        - 'Reason carefully about the quantities involved, double-check the arithmetic, and end with
+          `Answer: <number>`.'
+        - 'Break the problem into sub-steps, solve each one, and put the concluding value last as
+          `Answer: <number>`.'
+        - 'Identify what the question asks for, set up the calculation, and report the outcome on
+          the final line as `Answer: <number>`.'
+        - 'Show a concise chain of reasoning and close the reply with `Answer: <number>`.'
+        - 'Compute the answer from the numbers in the problem statement and write it exactly once,
+          on the last line, as `Answer: <number>`.'
+        - 'Explain the solution briefly, then give the numeric result alone on the last line in the
+          form `Answer: <number>`.'
+        - 'Solve it, verify the result against the question, and finish with a line reading `Answer:
+          <number>`.'
+      spo:
+        strategy.seeds:
+        - |-
+          {question}
+          Answer:
+        - |-
+          Read the problem carefully, work through the arithmetic step by step, then write the final number on the last line.
+          Question: {question}
+          Answer:
+        strategy.params.prompt_includes_choices: false
+  nextqa:
+    kind: mcq
+    why: |-
+      NExT-QA video MCQ (VideoMcqTask): the Question line and the choice list
+      are appended by the task, so every seed pool stays question-agnostic;
+      clips decode client-side. The nextqa raw cell pins an explicit seed.
+    task:
+      name: video_mcq
+      params:
+        data_dir: datasets/quickstart/nextqa/data
+        videos_dir: datasets/quickstart/nextqa/videos
+    bench:
+      task.params.data_dir: datasets/bench/nextqa/data
+      task.params.videos_dir: datasets/bench/nextqa/videos
+    prompts:
+      raw:
+        strategy.seeds:
+        - Classify the content of the target video.
+      cot:
+        strategy.params:
+          base_prompt: Classify the content of the target video.
+          cot_suffix: ''
+      evoprompt:
+        strategy.seeds:
+        - Classify the content of the target video.
+        - Watch the clip and identify the action, event, or causal relation it shows.
+        - Answer the multiple-choice question about the video by picking the best option.
+        - Examine what happens in the clip, then select the option that matches it.
+        - Pay attention to the actors, objects, and their interaction in the video before answering.
+        - Choose the single option that correctly describes the events in this clip.
+        - Reason about the temporal order of events in the video, then answer.
+        - Look at the whole clip, not just one frame, and decide which option is right.
+        - Answer the video question accurately using evidence visible in the clip.
+        - Select the option that best explains why or how the action in the video happens.
+      spo:
+        strategy.seeds:
+        - |-
+          {video}Answer the question about the video.
+          Question: {question}
+          Choices: [{choices}]
+        - |-
+          {video}Watch the clip carefully, then answer the question about the video.
+          Question: {question}
+          Choices: [{choices}]
+  mixed:
+    kind: mcq
+    why: |-
+      Mixed-modality MCQ (MixedMcqTask): one split, seven per-sample modality
+      compositions — passage -> images -> clips -> instruction/question/choices
+      render order, so a marker the sample lacks simply vanishes from the
+      instruction. Quickstart and bench share datasets/bench/mixed (no bench
+      override). The pool is written for this board rather than copied from
+      NExT-QA: no entry may name a modality a sample lacks.
+    task:
+      name: mixed_mcq
+      params:
+        data_dir: datasets/bench/mixed/data
+    prompts:
+      cot:
+        strategy.params:
+          base_prompt: Answer the question about the given sample.
+          cot_suffix: ''
+      evoprompt:
+        strategy.seeds:
+        - Answer the question about the given sample.
+        - Answer the multiple-choice question about the sample by picking the best option.
+        - Examine the sample, then select the option that matches it.
+        - Pay attention to every part of the sample before answering.
+        - Choose the single option that best describes the sample.
+        - Reason about the evidence in the sample, then answer.
+        - Look at the whole sample, not just one detail, and decide which option is right.
+        - Answer the question accurately using the evidence in the sample.
+        - Select the option that best explains the content of the sample.
+        - Read the sample carefully and pick the best matching option.
+      spo:
+        strategy.seeds:
+        - |-
+          {text}{image}{video}Answer the question about the given sample.
+          Question: {question}
+          Choices: [{choices}]

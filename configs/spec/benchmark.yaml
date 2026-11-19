@@ -1,0 +1,65 @@
+# The published benchmark matrix (E2: cell bases are assembled from
+# configs/spec, no per-cell YAMLs exist). 7 model tags x 6 open datasets x
+# 8 strategies = 336 cells, expanded by `eyas sweep --spec
+# configs/spec/benchmark.yaml`. One sweep cell set (one engine, 8 cells)
+# = filter one tag + one dataset and pin the seed with --set:
+#
+#   uv run eyas sweep --spec configs/spec/benchmark.yaml \
+#     --filter tag=q2b --filter dataset=pets \
+#     --set run.seed=42 \
+#     --output-root outputs/matrix_q2b_pets_s42
+#
+# Each cell = the assembled method/dataset contract (identical to the
+# quickstart cell of the same dataset+method, i.e. the full budget, protocol,
+# judges, strategy params carry over verbatim) + the bench-scale task
+# directories from datasets.yaml + the override-dict axes below. The per-cell
+# effective config is persisted in the run directory (run_config.json), so
+# this spec + the run dirs are the reproducibility record. Placeholder model
+# paths are real paths at run time via --set backend.params.model_path=...
+run_name: matrix_{tag}_{dataset}_{method}
+set:
+  run.trace: true # comprehensive record: per-round trace.jsonl in every cell
+axes:
+  tag:
+    q2b:
+      backend.params.model_path: /path/to/Qwen3.5-2B
+    q4b:
+      backend.params.model_path: /path/to/Qwen3.5-4B
+    q9b:
+      backend.params.model_path: /path/to/Qwen3.5-9B
+    ivl2b:
+      backend.params.model_path: /path/to/InternVL3.5-2B
+      # InternVL ships custom code (auto_map): the profile dict is REPLACED (the
+      # Qwen thinking_kwarg must not leak into a template without that variable)
+      # and the engine needs trust_remote_code stated.
+      backend.params.profile: { type: hf_template, trust_remote_code: true }
+      backend.params.engine_kwargs.trust_remote_code: true
+    ivl4b:
+      backend.params.model_path: /path/to/InternVL3.5-4B
+      backend.params.profile: { type: hf_template, trust_remote_code: true }
+      backend.params.engine_kwargs.trust_remote_code: true
+    ivl8b:
+      backend.params.model_path: /path/to/InternVL3.5-8B
+      backend.params.profile: { type: hf_template, trust_remote_code: true }
+      backend.params.engine_kwargs.trust_remote_code: true
+    q38b:
+      # Qwen3.8-27B: same qwen3_5 architecture family as the q3.5 tags, so the
+      # profile/thinking contract inherits verbatim. "q38b" is a legacy tag label
+      # for Qwen3.8-27B (it reads like 3.8B); the model is 27B.
+      backend.params.model_path: /path/to/Qwen3.8-27B
+  dataset: [pets, cub, sroie, textvqa, gsm8k, nextqa]
+  # the bench-scale data directories for each name ride in datasets.yaml
+  # (kind + quickstart task + bench override live together per dataset).
+  # sroie has no ape/opro quickstart file, but assembly builds the cell from
+  # the kie dataset contract + the method identity (same demo-path pattern any
+  # kie cell would get) — the historical synthesis combos are retired once the
+  # assembled cells prove equal to the deleted expansion (golden parity).
+  method: [raw, cot, hill_climb, evoprompt, opro, ape, protegi, spo]
+combos:
+  # bandit eval caps: 8 x samples_per_eval must fit the eval split — 32 where
+  # the split is 248+ samples (pets 296, cub 261), 31 on the 248-sample splits
+  # (sroie/textvqa/gsm8k/nextqa; 8 x 31 exact).
+  - when: { dataset: [pets, cub], method: protegi }
+    set: { budget.params.samples_per_eval: 32 }
+  - when: { dataset: [sroie, textvqa, gsm8k, nextqa], method: protegi }
+    set: { budget.params.samples_per_eval: 31 }

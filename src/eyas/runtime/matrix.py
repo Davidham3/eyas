@@ -32,7 +32,15 @@ from typing import Any
 
 import yaml
 
-__all__ = ["MatrixSpec", "load_matrix_spec", "parse_filters", "expand_matrix"]
+__all__ = [
+    "AxisValue",
+    "MatrixSpec",
+    "apply_bundle",
+    "default_base_resolver",
+    "load_matrix_spec",
+    "parse_filters",
+    "expand_matrix",
+]
 
 
 @dataclass(frozen=True)
@@ -58,10 +66,12 @@ class Combo:
 class MatrixSpec:
     """A parsed, validated matrix spec. ``axes`` keeps declaration order; the
     expansion product follows it (so cells sharing the leading axes stay
-    adjacent — the shape backend sharing exploits)."""
+    adjacent — the shape backend sharing exploits). ``base`` is the per-cell
+    file pattern; specs whose cells come from an injected resolver (the config
+    spec's benchmark section) carry no base at all."""
 
     path: Path
-    base: str
+    base: str | None
     run_name: str
     set: dict[str, Any]
     axes: dict[str, tuple[AxisValue, ...]]
@@ -133,12 +143,13 @@ def load_matrix_spec(path: str | Path) -> MatrixSpec:
         raise ValueError(
             f"matrix spec {path}: unknown keys {sorted(unknown)} (known: {sorted(known)})"
         )
-    for key in ("base", "run_name", "axes"):
+    for key in ("run_name", "axes"):
         if key not in raw:
             raise ValueError(f"matrix spec {path}: missing required key {key!r}")
-    base, run_name = raw["base"], raw["run_name"]
-    if not isinstance(base, str) or not base:
+    base = raw.get("base")
+    if base is not None and (not isinstance(base, str) or not base):
         raise ValueError(f"matrix spec {path}: base must be a non-empty path pattern")
+    run_name = raw["run_name"]
     if not isinstance(run_name, str) or not run_name:
         raise ValueError(f"matrix spec {path}: run_name must be a non-empty pattern")
     set_raw = raw.get("set") or {}
@@ -254,7 +265,10 @@ def _set_path(config: dict[str, Any], key: str, value: Any) -> None:
         node[parts[-1]] = value
 
 
-def _apply_bundle(config: dict[str, Any], bundle: Mapping[str, Any]) -> None:
+def apply_bundle(config: dict[str, Any], bundle: Mapping[str, Any]) -> None:
+    """Apply one override bundle (dotted-path keys, mapping values replace,
+    ``None`` deletes) in place — shared with the config-spec assembler so the
+    repo has exactly one bundle-merge implementation."""
     for key, value in bundle.items():
         _set_path(config, key, value)
 
@@ -268,24 +282,47 @@ def _format(pattern: str, values: Mapping[str, str], what: str) -> str:
         ) from exc
 
 
+#: A cell resolver turns one cell's axis values (plus the effective base
+#: pattern, combo re-basing included) into the cell's config dict. The default
+#: reads base YAML files; the config-spec assembler injects layered assembly.
+BaseResolver = Callable[[Mapping[str, str], str], dict[str, Any]]
+
+
+def default_base_resolver(
+    spec: MatrixSpec, load: Callable[[Path], dict[str, Any]] | None = None
+) -> BaseResolver:
+    """The file-based resolver: resolve the base pattern against the cell
+    values, require the file, and load it (``load`` is the CLI's section-
+    validating loader; the default is a bare ``yaml.safe_load``)."""
+    if not spec.base:
+        raise ValueError(f"matrix spec {spec.path}: no base pattern (cells need a resolver)")
+
+    def resolve(values: Mapping[str, str], pattern: str) -> dict[str, Any]:
+        base_path = Path(_format(pattern, values, "base"))
+        if not base_path.exists():
+            raise ValueError(f"matrix cell {dict(values)}: base config not found: {base_path}")
+        if load is not None:
+            return load(base_path)
+        return _require_mapping(
+            yaml.safe_load(base_path.read_text(encoding="utf-8")), f"base {base_path}"
+        )
+
+    return resolve
+
+
 def expand_matrix(
     spec: MatrixSpec,
     filters: Mapping[str, tuple[str, ...]] | None = None,
     *,
-    load_base: Callable[[Path], dict[str, Any]] | None = None,
+    resolve_base: BaseResolver | None = None,
 ) -> list[tuple[str, dict[str, Any]]]:
     """Expand the spec into ``(run_name, config)`` cells in axis-declaration
-    product order. Base paths resolve relative to the CWD (the repo-root
-    launch convention shared with ``plugins``); ``load_base`` is the per-file
-    loader — the CLI passes ``load_config``, tests pass their own."""
-    if load_base is None:
-
-        def _default_loader(p: Path) -> dict[str, Any]:
-            return _require_mapping(
-                yaml.safe_load(Path(p).read_text(encoding="utf-8")), f"base {p}"
-            )
-
-        load_base = _default_loader
+    product order. ``resolve_base(cell_values, base_pattern)`` produces a cell
+    base config — by default the spec's base file pattern, resolved relative to
+    the CWD (the repo-root launch convention shared with ``plugins``); a config
+    spec injects its layered assembler instead."""
+    if resolve_base is None:
+        resolve_base = default_base_resolver(spec)
     filters = dict(filters or {})
     for axis in filters:
         if axis not in spec.axes:
@@ -309,19 +346,16 @@ def expand_matrix(
         ]
         if any(c.skip for c in matching):
             continue
-        base_pattern = spec.base
+        base_pattern = spec.base or ""
         for c in matching:
             if c.base is not None:
                 base_pattern = c.base
-        base_path = Path(_format(base_pattern, cell_values, "base"))
-        if not base_path.exists():
-            raise ValueError(f"matrix cell {cell_values}: base config not found: {base_path}")
-        config = load_base(base_path)
-        _apply_bundle(config, spec.set)
+        config = resolve_base(cell_values, base_pattern)
+        apply_bundle(config, spec.set)
         for av in combo_values:
-            _apply_bundle(config, av.overrides)
+            apply_bundle(config, av.overrides)
         for c in matching:
-            _apply_bundle(config, c.set)
+            apply_bundle(config, c.set)
         run_name = _format(spec.run_name, cell_values, "run_name")
         _set_path(config, "run.name", run_name)
         if run_name in names_seen:

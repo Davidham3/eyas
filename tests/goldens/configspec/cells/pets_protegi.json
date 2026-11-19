@@ -1,0 +1,65 @@
+{
+  "backend": {
+    "name": "vllm",
+    "params": {
+      "engine_kwargs": {
+        "enable_prefix_caching": false,
+        "enforce_eager": true,
+        "max_num_batched_tokens": 16384,
+        "max_num_seqs": 512
+      },
+      "max_inflight": 512,
+      "model_path": "/path/to/Qwen3.5-9B",
+      "prefetch_workers": 8,
+      "profile": {
+        "thinking_kwarg": "enable_thinking",
+        "type": "hf_template"
+      }
+    }
+  },
+  "budget": {
+    "name": "bandit",
+    "params": {
+      "c": 2.0,
+      "eval_rounds": 8,
+      "keep_top": 0.5,
+      "samples_per_eval": 9
+    }
+  },
+  "eval_model": {
+    "name": "absolute"
+  },
+  "judge": {
+    "name": "mcq_llm",
+    "params": {
+      "variant": "default"
+    }
+  },
+  "protocol": {
+    "name": "identity"
+  },
+  "run": {
+    "final_eval": {
+      "split": "test"
+    },
+    "name": "quickstart_pets_protegi",
+    "seed": 42
+  },
+  "strategy": {
+    "name": "protegi",
+    "params": {
+      "beam_size": 4,
+      "n_gradients": 4,
+      "rounds": 3
+    }
+  },
+  "task": {
+    "name": "mcq",
+    "params": {
+      "data_dir": "datasets/quickstart/pets/data",
+      "dataset": "pets",
+      "images_dir": "datasets/quickstart/pets/images",
+      "train_per_group": 0
+    }
+  }
+}
