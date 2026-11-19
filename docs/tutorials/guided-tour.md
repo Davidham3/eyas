@@ -18,8 +18,9 @@ document, and the resume path, all identical in a real run. The numbers are not:
 the endpoint behind the docs URL answers `red` to every request, so metrics
 here carry no algorithmic meaning. The real-score story lives in
 [Getting started](getting-started.md). Nothing on this page can rot
-silently: every command block below is executed in CI, verbatim, against an
-in-repo stub of the OpenAI API.
+silently: every executable block below is executed in CI, verbatim, against an
+in-repo stub of the OpenAI API; the blocks that need a GPU, real data, or
+cross-block run state are skipped.
 
 ## 1. The materials
 

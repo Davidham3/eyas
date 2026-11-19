@@ -68,6 +68,9 @@ jobs:
           path: dist/
 
       - name: Publish to TestPyPI (rehearsal)
+        # Re-running every job on the same tag can smoke an already-published
+        # older artifact while still skip-existing-ing to a no-op publish. Do
+        # not re-run all jobs and do not move the tag: bump the rc instead.
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/

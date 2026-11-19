@@ -35,11 +35,12 @@ Requires Python: core 3.12–3.14; vLLM extra verified on 3.12. Install with
 [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv pip install "eyas[api]"     # light HTTP client: rendering happens server-side
+uv venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+uv pip install "eyas[api,prepare]"     # the story path: HTTP client + dataset prep
 ```
 
-Extras compose; pick one inference shape and add `prepare` once to build datasets — this page's
-story path is `uv pip install "eyas[api,prepare]"`:
+Extras compose; pick one inference shape and add `prepare` once to build datasets — the
+primary block above is exactly that (`eyas[api,prepare]`):
 
 | Install | What you get | Notes |
 | --- | --- | --- |

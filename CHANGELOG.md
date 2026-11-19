@@ -52,8 +52,9 @@ Initial public release.
   with 3.13 and 3.14 classifiers added. Core is covered on 3.12–3.14; the vLLM
   extra remains verified on 3.12.
 - **pip-first install story**: `uv pip install "eyas[api]"` (or `[vllm]` /
-  `[prepare]`) is the documented path, and the tutorials use inline YAML so an
-  installed wheel needs no repository files. `git clone` + `uv sync` remains the
+  `[prepare]`) is the documented path, and the reader tutorials use inline YAML
+  so an installed wheel needs no repository files; the benchmark tutorial
+  remains a repository-checkout path. `git clone` + `uv sync` remains the
   developer path, documented in `CONTRIBUTING.md`.
 - **Tag-driven release pipeline**: pushing a `v*` tag builds the distribution
   once, rehearses it on TestPyPI, runs a 3-OS × Python 3.12/3.13/3.14

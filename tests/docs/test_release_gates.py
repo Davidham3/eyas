@@ -53,11 +53,11 @@ def test_version_matches(tag: str, version: str, expected: bool) -> None:
 
 
 def test_real_pyproject_version_round_trips() -> None:
-    """The script reads the shipped pyproject: version 0.1.0rc1, and its
-    tag form aligns with itself."""
+    """The script reads the shipped pyproject, and its tag form aligns with
+    itself — version-agnostic so the documented 0.1.0 bump cannot rot it."""
     mod = _load()
     version = mod.pyproject_version()
-    assert version == "0.1.0rc1"
+    assert re.fullmatch(r"\d+\.\d+\.\d+(?:[a-z]+\d+)?", version), version
     assert mod.version_matches("v" + version, version) is True
 
 
@@ -71,15 +71,19 @@ def _cli(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_cli_exit_zero_on_match() -> None:
-    proc = _cli("v0.1.0rc1")
+    version = _load().pyproject_version()
+    proc = _cli("v" + version)
     assert proc.returncode == 0, proc.stderr
 
 
 def test_cli_exit_one_and_both_values_on_stderr_when_mismatched() -> None:
-    proc = _cli("v0.1.0")
+    version = _load().pyproject_version()
+    tag = "v" + version + ".post999"  # guaranteed mismatch at any current version
+    proc = _cli(tag)
     assert proc.returncode == 1
-    assert "v0.1.0" in proc.stderr
-    assert "0.1.0rc1" in proc.stderr
+    # both values quoted and reported, not just the tag
+    assert f"'{tag}'" in proc.stderr
+    assert f"'{version}'" in proc.stderr
 
 
 def test_cli_requires_exactly_one_tag_argument() -> None:
@@ -98,6 +102,11 @@ GATE_COMMAND = 'uv run python scripts/check_tag_version.py "${GITHUB_REF_NAME}"'
 # The one moving ref the release pipeline is allowed: the trusted-publishing
 # action only publishes branches/tags of its own repo, so release/v1 is stable.
 ALLOWED_MOVING_ACTION = "pypa/gh-action-pypi-publish@release/v1"
+MOVING_REF = re.compile(r"@(main|master|v1|release/v1)$")
+
+
+def _is_moving_ref(ref: str) -> bool:
+    return MOVING_REF.search(ref) is not None
 
 
 def _workflow() -> dict:
@@ -182,6 +191,7 @@ def test_build_uploads_the_single_python_dist_artifact() -> None:
         step for step in _steps(_workflow(), "build") if _has_uses(step, "actions/upload-artifact")
     ]
     assert [step["with"]["name"] for step in uploads] == ["python-dist"]
+    assert [step["with"]["path"] for step in uploads] == ["dist/"]
 
 
 def test_publish_consumers_download_the_same_artifact() -> None:
@@ -191,15 +201,21 @@ def test_publish_consumers_download_the_same_artifact() -> None:
             step for step in _steps(doc, job) if _has_uses(step, "actions/download-artifact")
         ]
         assert [step["with"]["name"] for step in downloads] == ["python-dist"], job
+        # the same dist/ layout the publishers read
+        assert [step["with"]["path"] for step in downloads] == ["dist/"], job
     # The smoke matrix installs from TestPyPI, so it must not smuggle a local dist.
     assert not any(_has_uses(step, "actions/download-artifact") for step in _steps(doc, "smoke"))
 
 
 def test_smoke_matrix_covers_every_supported_os_and_python() -> None:
-    strategy = _workflow()["jobs"]["smoke"]["strategy"]
+    job = _workflow()["jobs"]["smoke"]
+    assert job["runs-on"] == "${{ matrix.os }}"
+    strategy = job["strategy"]
     assert strategy["fail-fast"] is False
     assert strategy["matrix"]["os"] == ["ubuntu-latest", "macos-latest", "windows-latest"]
     assert strategy["matrix"]["python-version"] == ["3.12", "3.13", "3.14"]
+    setup = next(step for step in job["steps"] if _has_uses(step, "actions/setup-python"))
+    assert setup["with"]["python-version"] == "${{ matrix.python-version }}"
 
 
 def test_smoke_installs_the_rehearsed_extra_from_testpypi() -> None:
@@ -209,6 +225,13 @@ def test_smoke_installs_the_rehearsed_extra_from_testpypi() -> None:
     assert "eyas[api]==" in runs
     assert 'python -c "import eyas"' in runs
     assert "eyas --help" in runs
+    install = next(
+        step
+        for step in _steps(_workflow(), "smoke")
+        if step.get("name") == "Install the published wheel from TestPyPI"
+    )
+    # one shell across the three OSes: the multi-line pip invocation needs bash
+    assert install["shell"] == "bash"
 
 
 def test_only_the_github_release_job_may_write_contents() -> None:
@@ -237,6 +260,24 @@ def test_publish_jobs_use_trusted_publishing_oidc() -> None:
         if doc["jobs"][job].get("permissions", {}).get("id-token") == "write"
     ]
     assert oidc_writers == publishers
+
+
+def _publisher(doc: dict, job: str) -> dict:
+    return next(step for step in _steps(doc, job) if _has_uses(step, "pypa/gh-action-pypi-publish"))
+
+
+def test_testpypi_publishes_to_the_rehearsal_index_with_skip_existing() -> None:
+    """The highest-consequence line in the workflow: the rehearsal must never
+    touch the real index, and a re-run must tolerate an already-published file."""
+    with_ = _publisher(_workflow(), "testpypi")["with"]
+    assert with_["repository-url"] == "https://test.pypi.org/legacy/"
+    assert _true(with_["skip-existing"])
+
+
+def test_pypi_publisher_uses_the_real_index() -> None:
+    with_ = _publisher(_workflow(), "pypi").get("with", {})
+    assert "test.pypi.org" not in str(with_)
+    assert with_.get("repository-url") in (None, "https://upload.pypi.org/legacy/")
 
 
 @pytest.mark.parametrize(
@@ -287,12 +328,14 @@ def test_action_references_are_immutably_pinned() -> None:
         for step in job.get("steps", [])
         if "uses" in step
     ]
-    moving = {
-        ref
-        for ref in uses
-        if re.search(r"@(main|master|v1)$", ref) and ref != ALLOWED_MOVING_ACTION
-    }
+    moving = {ref for ref in uses if _is_moving_ref(ref) and ref != ALLOWED_MOVING_ACTION}
     assert moving == set()
+    # the allowlist branch must be reachable: the detector classifies every
+    # moving shape (the exemption, not a regex miss, is why release/v1 passes)
+    assert _is_moving_ref(ALLOWED_MOVING_ACTION)
+    for ref in ("main", "master", "v1", "release/v1"):
+        assert _is_moving_ref(f"owner/action@{ref}")
+    assert not _is_moving_ref("owner/action@v10")
 
 
 def test_setup_uv_is_pinned_to_the_lockfile_interpreter_tool() -> None:

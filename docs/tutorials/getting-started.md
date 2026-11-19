@@ -12,6 +12,7 @@ Eyas requires **Python: core 3.12–3.14; vLLM extra verified on 3.12**. Install
 environment with [uv](https://docs.astral.sh/uv/) (`pip install` works too):
 
 ```bash
+uv venv && source .venv/bin/activate   # create and enter a virtualenv (Windows: .venv\Scripts\activate)
 uv pip install "eyas[api,prepare]"   # the story path: HTTP client + dataset prep
 ```
 
@@ -25,7 +26,8 @@ in-process:
 | `uv pip install "eyas[api]"` | OpenAI-compatible HTTP client | Lightest option; rendering happens server-side |
 | `uv pip install "eyas[prepare]"` | `eyas prepare` dataset download/convert | Needed once per dataset; heavy reader stack (datasets, pyarrow) |
 
-Every command below uses that `eyas` console script. Working on Eyas itself — editing source,
+Every command below runs `uv run eyas` (drop the `uv run` prefix if `eyas` is already on your
+PATH). Working on Eyas itself — editing source,
 running `--cell` benchmark cells, or reading `configs/` and `examples/` — starts from a git
 checkout with `uv sync`; see [CONTRIBUTING](https://github.com/Davidham3/eyas/blob/main/CONTRIBUTING.md).
 
@@ -87,7 +89,7 @@ strategy:
     rounds: 4
 ```
 
-Everything outside the `backend` section is the experiment setup, dissected line by line on the [Your first optimization](first-optimization.md) page. The connection to your model is two lines: `base_url` and `api_key_env`. Any OpenAI-compatible endpoint works: a self-hosted vLLM or SGLang server, or a hosted service whose URL ends in `/v1`. `api_key_env` names the *environment variable* holding your key (`export EYAS_DOC_STUB_KEY=<your-key>`); the key itself never enters configs or git, and the backend fails fast at startup if the variable is unset. The shipped file pins `http://localhost:8000/v1` and `qwen3.5-9b` as placeholders; point them at your endpoint without editing the file:
+Everything outside the `backend` section is the experiment setup, dissected line by line on the [Your first optimization](first-optimization.md) page. The connection to your model is two lines: `base_url` and `api_key_env`. Any OpenAI-compatible endpoint works: a self-hosted vLLM or SGLang server, or a hosted service whose URL ends in `/v1`. `api_key_env` names the *environment variable* holding your key (`export EYAS_DOC_STUB_KEY=<your-key>`); the key itself never enters configs or git, and the backend fails fast at startup if the variable is unset. The saved file pins `http://localhost:8000/v1` and `qwen3.5-9b` as placeholders; point them at your endpoint without editing the file:
 
 ```text
 --set backend.params.base_url=https://api.example.com/v1 --set backend.params.model=<your-served-model-name>
