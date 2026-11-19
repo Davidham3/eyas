@@ -517,3 +517,25 @@ contract:
 - **No sampling-profile × backend-capability check at assembly time**: a profile's
   `thinking` / tier requirements are not validated against the backend when the run is
   assembled; the four rules in §3 are the complete set.
+
+## 13. Dependency posture and evaluated alternatives
+
+Runtime dependencies: exactly one (`pyyaml`). Four facilities where an external
+package was a candidate were each evaluated and deliberately kept in-house:
+
+- **Logging (§10)** — `eyas.logging` is the backpressure contract: bounded-queue
+  enqueue never blocks the caller, drops and sink errors are counted and reported,
+  and key events ride an unbounded priority channel. Neither stdlib
+  `QueueHandler`/`QueueListener`, nor loguru, nor structlog provides this
+  combination without rebuilding it on top.
+- **Backend vocabulary** — the message/request types in `eyas.backends.base` are
+  backend-neutral by design; OpenAI-SDK types would couple the domain to one
+  vendor's wire format, and litellm-style routers sit exactly where this framework
+  needs its own control points (planner chokepoint, prefetch seams, sampling
+  passthrough).
+- **Checkpoint serialization** — the typed `to_json`/`from_json` pairs are the
+  durable checkpoint contract (schema-stamped, byte-level resume identity);
+  pydantic would restate a wire format it must then keep byte-compatible, and
+  conflicts with identity semantics like `Prompt`'s hash-only equality.
+- **Markdown report table** — one call site (`report.render_markdown`) pinned by
+  contract tests; a table library would add a dependency without a second user.
