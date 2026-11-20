@@ -14,6 +14,8 @@ contract — comments/blank lines skipped, anything that is not exactly
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 import types
 from pathlib import Path
 
@@ -613,3 +615,42 @@ def test_gen_configs_default_spec_dir_from_any_cwd(
     out = tmp_path / "cells"
     assert main(["gen-configs", "--cell", "pets/raw", "--out", str(out)]) == 0
     assert (out / "pets_raw.yaml").exists()
+
+
+def test_run_cell_dry_run_offline_and_cwd_independent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # --dry-run assembles from the packaged spec and stops: no checkout under
+    # CWD, no engine import, no run dir — the release smoke leans on all three
+    monkeypatch.chdir(tmp_path)
+    code = main(["run", "--cell", "pets/raw", "--dry-run"])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "nothing executed" in out
+    assert re.search(r"spec_sha=[0-9a-f]{12}", out)
+    assert not (tmp_path / "outputs").exists()
+    # the smoke-bearing property: in a fresh interpreter the dry path imports
+    # no eyas.engine.* module at all (in-process sys.modules is contaminated
+    # by sibling tests, so probe a subprocess)
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys\n"
+            "from eyas.cli import main\n"
+            "assert main(['run', '--cell', 'pets/raw', '--dry-run']) == 0\n"
+            "leaked = sorted(m for m in sys.modules if m.startswith('eyas.engine'))\n"
+            "assert not leaked, leaked\n",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert probe.returncode == 0, probe.stderr
+
+
+def test_run_dry_run_without_cell_is_a_usage_error(tmp_path: Path) -> None:
+    cfg = _write_cfg(tmp_path, "cfg", 42)
+    with pytest.raises(SystemExit):
+        main(["run", "--config", str(cfg), "--dry-run"])

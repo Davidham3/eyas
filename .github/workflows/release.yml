@@ -103,6 +103,11 @@ jobs:
           python -c "import eyas"
           eyas --help
 
+      - name: Packaged-spec smoke (offline)
+        shell: bash
+        run: |
+          eyas run --cell pets/raw --dry-run
+
   pypi:
     needs: smoke
     runs-on: ubuntu-latest

@@ -68,6 +68,11 @@ def main(argv: list[str] | None = None) -> int:
         metavar="KEY=VALUE",
         help="Dotted-path config overrides (repeatable), e.g. --set run.seed=43",
     )
+    run_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="(--cell mode) assemble the cell from the packaged spec and exit without running",
+    )
     run_p.add_argument("--output-dir", help="Run dir (defaults to outputs/<name>/<timestamp>)")
     run_p.add_argument(
         "--resume", help="Resume from checkpoint.json in an existing run dir (not --output-dir)"
@@ -384,8 +389,8 @@ def _cmd_run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
         parser.error("run needs exactly one of --config or --cell")
     if args.variant and not args.cell:
         parser.error("--variant only applies to --cell")
-    from eyas.engine.runtime import load_config, run_experiment
-    from eyas.runtime.config import apply_overrides
+    if args.dry_run and not args.cell:
+        parser.error("--dry-run only applies to --cell")
 
     if args.cell:
         from eyas.configspec import cell_config, load_spec, spec_sha
@@ -403,9 +408,26 @@ def _cmd_run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
             config["run"]["spec_sha"] = spec_sha(spec)
         except (ValueError, FileNotFoundError) as exc:
             parser.error(f"--cell {args.cell}: {exc}")
+        if args.dry_run:
+            # the offline preview: packaged spec in, assembled config out,
+            # nothing executed. Deliberately free of eyas.engine imports —
+            # the bare-wheel release smoke depends on that.
+            from eyas.runtime.config import apply_overrides
+
+            config = apply_overrides(config, args.set)
+            print(
+                f"run --cell {args.cell}: config assembled, "
+                f"spec_sha={config['run']['spec_sha']} — nothing executed"
+            )
+            return 0
     else:
+        from eyas.engine.runtime import load_config
+
         assert args.config is not None  # exactly-one-of check above
         config = load_config(args.config)
+    from eyas.engine.runtime import run_experiment
+    from eyas.runtime.config import apply_overrides
+
     config = apply_overrides(config, args.set)
     result = run_experiment(config, output_dir=args.output_dir, resume=args.resume)
     best = result.best_text()

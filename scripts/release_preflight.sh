@@ -11,8 +11,10 @@
 # what: cleans dist/, builds sdist + wheel with `uv build`, checks both with
 # `twine check`, installs the exact built wheel (never `-e`) into a throwaway
 # venv at /tmp/eyas-preflight-venv, then imports eyas, verifies `eyas --version`
-# against the installed distribution metadata, and runs `eyas --help` from that
-# venv. Every step prints a marker; any failure exits non-zero.
+# against the installed distribution metadata, runs `eyas --help` from that
+# venv, and finally proves the packaged spec reads from the wheel alone:
+# `run --cell --dry-run` plus a gen-configs export whose GENERATED header carries
+# the spec digest. Every step prints a marker; any failure exits non-zero.
 #
 # Usage (any directory; repo root is resolved from this file's location):
 #     bash scripts/release_preflight.sh
@@ -37,8 +39,8 @@ fail() {
   exit 1
 }
 
-# --- 1/5: build ------------------------------------------------------------
-step "1/5 Clean dist/ and build sdist + wheel (uv build)"
+# --- 1/6: build ------------------------------------------------------------
+step "1/6 Clean dist/ and build sdist + wheel (uv build)"
 rm -rf "$DIST"
 uv build
 
@@ -52,22 +54,22 @@ shopt -u nullglob
 printf 'built wheel: %s\n' "${wheels[0]##*/}"
 printf 'built sdist: %s\n' "${sdists[0]##*/}"
 
-# --- 2/5: metadata ---------------------------------------------------------
+# --- 2/6: metadata ---------------------------------------------------------
 # This is the only step whose *tooling* is fetched from an index: `uvx` resolves
 # twine on first use (later runs hit the cache). The wheel's own runtime
 # dependencies in step 3 come from the same configured index / cache, and no
 # other step touches the network.
-step "2/5 Check distribution metadata (uvx twine check dist/*)"
+step "2/6 Check distribution metadata (uvx twine check dist/*)"
 uvx twine check dist/*
 
-# --- 3/5: clean venv, exact wheel -----------------------------------------
-step "3/5 Recreate clean venv at $VENV and install the exact wheel"
+# --- 3/6: clean venv, exact wheel -----------------------------------------
+step "3/6 Recreate clean venv at $VENV and install the exact wheel"
 rm -rf "$VENV"
 uv venv "$VENV"
 uv pip install --python "$VENV/bin/python" "${wheels[0]}"
 
-# --- 4/5: import and version consistency -----------------------------------
-step "4/5 Import eyas in the clean venv and check the CLI version"
+# --- 4/6: import and version consistency -----------------------------------
+step "4/6 Import eyas in the clean venv and check the CLI version"
 module_path="$("$VENV/bin/python" -c 'import eyas; print(eyas.__file__)')"
 printf 'import eyas OK: %s\n' "$module_path"
 # Guard against a stray editable/checkout import: the module must live inside
@@ -89,8 +91,18 @@ printf 'eyas --version: %s\n' "$cli_version"
 [[ "$cli_version" == "eyas $metadata_version" ]] ||
   fail "version mismatch: CLI says '$cli_version', metadata says '$metadata_version'"
 
-# --- 5/5: console script ---------------------------------------------------
-step "5/5 Run eyas --help from the clean venv"
+# --- 5/6: console script ---------------------------------------------------
+step "5/6 Run eyas --help from the clean venv"
 "$VENV/bin/eyas" --help
+
+# --- 6/6: packaged spec reads from the wheel (offline) ----------------------
+# The rc2 headline property: a wheel-only install (no checkout, no CWD
+# assumption) assembles a cell from the spec shipped inside the package. Also
+# guards the dry-run path stays free of engine/vllm imports: this venv has
+# only the bare wheel.
+step "6/6 Assemble a cell from the packaged spec (offline, no vllm)"
+"$VENV/bin/eyas" run --cell pets/raw --dry-run
+"$VENV/bin/eyas" gen-configs --cell pets/raw --out "$VENV/gen-check"
+grep -Eq ' spec=[0-9a-f]{12}\)' "$VENV/gen-check/pets_raw.yaml"
 
 printf '\n==> ALL PREFLIGHT CHECKS PASSED\n'
