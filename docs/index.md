@@ -1,4 +1,4 @@
-# Eyas
+# Eyas — Automatic Prompt Optimization for Multimodal Models
 
 **Train sharp-eyed prompts for multimodal models.**
 
@@ -31,6 +31,19 @@ Four problems come with the territory of running an optimization loop on real mu
 ```
 
 What makes those comparisons fair, and the eight methods interchangeable, is a single contract: a method is only a **strategy** whose every `step` decides *evaluate these candidates, propose these new ones, or finish with a best*; everything else (budgeting, cache-first evaluation, checkpointing, judging, cost accounting) belongs to one managed loop that all eight share, byte for byte. That is why eight methods are comparable on equal budgets, why writing a ninth is a ~100-line exercise ([methods](methods.md), [contract-driven design](10-architecture.md)), and why a run directory (per-sample records, prompts, history, bill) is self-contained enough to resume from and to audit afterwards.
+
+Five of the eight are reproduced from published SOTA prompt optimization papers — APE, OPRO, EvoPrompt, ProTeGi, SPO — each with a conformance record against the official repo pinned at commit level ([baseline fidelity](baselines-fidelity.md)). Δ is the published TextVQA test gain over the seed prompt (mean ± σ over seeds 42/43/44, quickstart tier, machine-regenerated from the run dirs); each row links its method card.
+
+| Method | Published as | Algorithmic identity | Δ vs `raw` |
+| --- | --- | --- | --- |
+| [`opro`](methods.md#opro) | **OPRO** — Yang et al., *Optimization by PROmpting*, ICLR 2024 ([arXiv:2309.03409](https://arxiv.org/abs/2309.03409)) | keeps an (instruction, score) trajectory in context; the model proposes its successor from the ranking | **+8.7 pp** |
+| [`spo`](methods.md#spo) | **SPO** — Xiang et al., *Self-Supervised Prompt Optimization*, Findings of EMNLP 2025 ([arXiv:2502.06855](https://arxiv.org/abs/2502.06855)) | reference-free answer voting: ABBA pairwise ballots, the selection channel never sees a gold label | +6.4 pp |
+| [`evoprompt`](methods.md#evoprompt) | **EvoPrompt** — Guo et al., ICLR 2024 ([arXiv:2309.08532](https://arxiv.org/abs/2309.08532)) | evolves a prompt population with LLM-run genetic / differential-evolution operators | +5.8 pp |
+| [`ape`](methods.md#ape) | **APE** — Zhou et al., *Large Language Models Are Human-Level Prompt Engineers*, ICLR 2023 ([arXiv:2211.01910](https://arxiv.org/abs/2211.01910)) | one-shot forward induction: induce instructions from demo pools, score the whole pool, keep the best | +5.6 pp |
+| [`protegi`](methods.md#protegi) | **ProTeGi** — Pryzant et al., EMNLP 2023 ([arXiv:2305.03495](https://arxiv.org/abs/2305.03495)) | textual gradients on sampled errors + beam search + UCB bandit candidate selection | +1.3 pp |
+| [`hill_climb`](methods.md#hill_climb) | framework baseline (classic iterative refinement) | greedy local search over a fixed edit menu | +0.2 pp |
+| [`cot`](methods.md#cot) | framework baseline (chain-of-thought rendering) | identity lives in the rendered prompt, not the loop | −42.8 pp on this judgeless QA task — the published anti-pattern row |
+| [`raw`](methods.md#raw) | framework baseline (evaluation floor) | evaluates the seed prompt once; every Δ above is measured against it | 0 |
 
 One level up: the object this loop optimizes is a *textualized component*, and a prompt is simply the component the field optimizes today. The same propose-measure-keep machinery is what the field is now turning toward agent skills and instruction libraries; this framework's contract, a textual candidate plus a managed measurement loop, is the shape such a component would need. That is an observation about the domain's map, not a promise: Eyas ships prompt optimization, and that is the whole claim.
 

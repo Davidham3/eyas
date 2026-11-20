@@ -2,7 +2,7 @@
   <img src="https://davidham3.github.io/eyas/_static/eyas.svg" alt="Eyas logo" width="120">
 </p>
 
-# Eyas
+# Eyas — Automatic Prompt Optimization for Multimodal Models
 
 **Train sharp-eyed prompts for multimodal models.**
 
@@ -32,6 +32,29 @@ to end in [Getting started](docs/tutorials/getting-started.md).
 The full published scoreboard, 7 models × 6 datasets × 8 methods × 3 seeds (1008 completed runs,
 judge-channel and token accounting on every cell), is the
 [bench benchmark](docs/08-bench-benchmark.md).
+
+## Supported methods: five published SOTA baselines, three framework baselines
+
+Eyas reproduces five state-of-the-art prompt optimization methods from the literature — **APE**,
+**OPRO**, **EvoPrompt**, **ProTeGi**, **SPO** — plus three framework baselines, all eight running
+on one strategy contract at equal budgets. Δ is the published TextVQA test gain over the seed
+prompt (mean ± σ over seeds 42/43/44, quickstart tier, machine-regenerated from the run dirs);
+each row links its method card, and every paper method carries a conformance record against the
+official repo pinned at commit level ([baseline fidelity](docs/baselines-fidelity.md)).
+
+| Method | Published as | Algorithmic identity | Δ vs `raw` |
+| --- | --- | --- | --- |
+| [`opro`](docs/methods.md#opro) | **OPRO** — Yang et al., *Optimization by PROmpting*, ICLR 2024 ([arXiv:2309.03409](https://arxiv.org/abs/2309.03409)) | keeps an (instruction, score) trajectory in context; the model proposes its successor from the ranking | **+8.7 pp** |
+| [`spo`](docs/methods.md#spo) | **SPO** — Xiang et al., *Self-Supervised Prompt Optimization*, Findings of EMNLP 2025 ([arXiv:2502.06855](https://arxiv.org/abs/2502.06855)) | reference-free answer voting: ABBA pairwise ballots, the selection channel never sees a gold label | +6.4 pp |
+| [`evoprompt`](docs/methods.md#evoprompt) | **EvoPrompt** — Guo et al., ICLR 2024 ([arXiv:2309.08532](https://arxiv.org/abs/2309.08532)) | evolves a prompt population with LLM-run genetic / differential-evolution operators | +5.8 pp |
+| [`ape`](docs/methods.md#ape) | **APE** — Zhou et al., *Large Language Models Are Human-Level Prompt Engineers*, ICLR 2023 ([arXiv:2211.01910](https://arxiv.org/abs/2211.01910)) | one-shot forward induction: induce instructions from demo pools, score the whole pool, keep the best | +5.6 pp |
+| [`protegi`](docs/methods.md#protegi) | **ProTeGi** — Pryzant et al., EMNLP 2023 ([arXiv:2305.03495](https://arxiv.org/abs/2305.03495)) | textual gradients on sampled errors + beam search + UCB bandit candidate selection | +1.3 pp |
+| [`hill_climb`](docs/methods.md#hill_climb) | framework baseline (classic iterative refinement) | greedy local search over a fixed edit menu | +0.2 pp |
+| [`cot`](docs/methods.md#cot) | framework baseline (chain-of-thought rendering) | identity lives in the rendered prompt, not the loop | −42.8 pp on this judgeless QA task — the published anti-pattern row |
+| [`raw`](docs/methods.md#raw) | framework baseline (evaluation floor) | evaluates the seed prompt once; every Δ above is measured against it | 0 |
+
+Picking between them is a documented decision, not folklore: [which method should I
+pick?](docs/methods.md#which-one-should-i-pick) maps task shape and budget to a starting method.
 
 ## Run the story
 

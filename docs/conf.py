@@ -34,6 +34,22 @@ nb_execution_mode = "off"
 # -- HTML output -------------------------------------------------------------
 html_theme = "sphinx_book_theme"
 html_title = "Eyas"
+# Search/generative-engine surface: the landing description is what crawlers and
+# LLM answer engines quote; keywords stay honest (every listed method ships).
+html_meta = {
+    "description": (
+        "Eyas is a performance-first automatic prompt optimization (APO) framework "
+        "for multimodal models: eight optimizers on one strategy contract "
+        "(APE, OPRO, EvoPrompt, ProTeGi, SPO, hill climbing), backend-agnostic "
+        "(in-process vLLM or any OpenAI-compatible endpoint), per-run cost "
+        "accounting and a public 1008-run benchmark scoreboard."
+    ),
+    "keywords": (
+        "prompt optimization, automatic prompt optimization, APO, prompt "
+        "engineering, multimodal, vision-language model, APE, OPRO, EvoPrompt, "
+        "ProTeGi, SPO, hill climbing, vLLM, LLM"
+    ),
+}
 html_theme_options = {
     "use_edit_page_button": False,
     "navigation_with_keys": True,
