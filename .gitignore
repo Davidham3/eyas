@@ -26,10 +26,11 @@ htmlcov/
 # Build/measurement artifacts (coverage lcov from the local gate)
 target/
 
-# Experiment artifacts
+# Experiment artifacts (root-anchored: an unanchored `runs/` also swallows
+# tests/runs/, which silently hid 10 test files from `git add` once before)
 outputs/
 outputs_*/
-runs/
+/runs/
 *.log
 io_debug.log
 
