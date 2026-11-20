@@ -376,8 +376,12 @@ head -1 tmp/tour_cells/pets_raw.yaml
 ```
 
 ```text
-# GENERATED from configs/spec — do not edit (eyas gen-configs --cell pets/raw)
+# GENERATED from configs/spec — do not edit (eyas gen-configs --cell pets/raw spec=<12-hex>)
 ```
+
+That trailing `spec=` token is the digest of the shipped spec files — the same
+provenance value `run --cell` records as `run.spec_sha` in `run_config.json` —
+so an exported cell carries evidence of which spec version produced it.
 
 The exported cell re-enters §2 unchanged:
 `uv run eyas run --config tmp/tour_cells/pets_raw.yaml`. For an endpoint served over

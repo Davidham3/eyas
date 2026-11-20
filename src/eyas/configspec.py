@@ -498,11 +498,16 @@ def cell_notes(
 def render_cell_yaml(spec: Spec, dataset: str, method: str, variant: str | None = None) -> str:
     """One editable cell YAML (the ``eyas gen-configs`` product): GENERATED
     header + fidelity notes + the effective config, sections in canonical
-    order. ``yaml.safe_load(render_cell_yaml(...))`` equals ``cell_config``."""
+    order. ``yaml.safe_load(render_cell_yaml(...))`` equals ``cell_config``.
+    The header's last token is the spec content digest (``spec_sha``) — the
+    same provenance value ``run --cell`` records in ``run_config.json`` — so
+    a generated file proves which shipped spec produced it."""
     config = cell_config(spec, dataset, method, variant)
     lines = [
         "# GENERATED from configs/spec — do not edit (eyas gen-configs"
-        f" --cell {dataset}/{method}" + (f" --variant {variant}" if variant else "") + ")"
+        f" --cell {dataset}/{method}"
+        + (f" --variant {variant}" if variant else "")
+        + f" spec={spec_sha(spec)})"
     ]
     for label, why in cell_notes(spec, dataset, method, variant):
         lines.append(f"# [{label}]")

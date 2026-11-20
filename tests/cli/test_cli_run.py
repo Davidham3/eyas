@@ -13,6 +13,7 @@ contract — comments/blank lines skipped, anything that is not exactly
 
 from __future__ import annotations
 
+import re
 import types
 from pathlib import Path
 
@@ -511,6 +512,8 @@ def _parse_generated(text: str) -> dict:
 def test_gen_configs_single_cell_round_trips_golden(tmp_path: Path, capsys) -> None:
     import json
 
+    from eyas.configspec import load_spec, spec_sha
+
     code = main(
         ["gen-configs", "--cell", "gsm8k/cot", "--spec-dir", str(_SPEC_DIR), "--out", str(tmp_path)]
     )
@@ -520,6 +523,13 @@ def test_gen_configs_single_cell_round_trips_golden(tmp_path: Path, capsys) -> N
     path = tmp_path / "gsm8k_cot.yaml"
     text = path.read_text(encoding="utf-8")
     assert text.startswith("# GENERATED from configs/spec — do not edit")
+    # provenance stamp (rc2): the header carries the spec content digest —
+    # the same 12-hex value spec_sha records in run_config.json — as the
+    # last token before the closing paren
+    header = text.splitlines()[0]
+    stamp = re.search(r" spec=([0-9a-f]{12})\)$", header)
+    assert stamp is not None, header
+    assert stamp.group(1) == spec_sha(load_spec(_SPEC_DIR))
     assert "# [method cot]" in text and "# [dataset gsm8k]" in text
     parsed = _parse_generated(text)
     golden = json.loads((_GOLDEN_CELLS / "gsm8k_cot.json").read_text(encoding="utf-8"))
