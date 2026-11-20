@@ -9,7 +9,8 @@ checkout and use the `scripts/` dataset-build helpers. The spec itself now ships
 the installed package (`src/eyas/spec` in the checkout, `eyas/spec` in a wheel), so a
 pip user holds the identical spec — but reproducing the published benchmark end to end
 additionally needs the bench-data build recipes that live in `scripts/`, so the full
-study stays documented as the checkout path. For everyday optimization, pip users
+study stays documented as the checkout path (Steps 1–2 — install, prepare, and single
+`--cell` runs — work from a plain install). For everyday optimization, pip users
 follow the inline-YAML tutorials ([Getting started](getting-started.md), [Your first
 optimization](first-optimization.md)).
 
@@ -43,9 +44,10 @@ The script builds `datasets/quickstart/<ds>/{data,images}/`, downloading through
 
 ## Step 2 — single run
 
-Cells are assembled from the packaged config spec ([`src/eyas/spec`](../../src/eyas/spec) in the checkout) — there are no per-cell files to read before running; `--cell <dataset>/<method>` is the whole address:
+Cells are assembled from the packaged config spec ([`src/eyas/spec`](../../src/eyas/spec) in the checkout) — there are no per-cell files to read before running; `--cell <dataset>/<method>` is the whole address. The address inventory is the published board tables ([quickstart benchmark](../07-quickstart-benchmark.md), [bench benchmark](../08-bench-benchmark.md)); preview any address offline first — it assembles the full config from the spec and prints its digest without executing anything:
 
 ```bash
+uv run eyas run --cell pets/raw --dry-run
 uv run eyas run --cell pets/raw
 ```
 
@@ -54,6 +56,10 @@ Each cell pins the whole protocol: data splits, backend, eval model, budget tier
 ```bash
 uv run eyas run --cell pets/raw --set run.seed=43
 ```
+
+Data paths resolve relative to the current directory: run from where Step 1 built
+`datasets/quickstart/` (a fresh install in a different directory finds no data there —
+the assembled config is identical, the dataset roots are not).
 
 ## Step 3 — sweep everything
 

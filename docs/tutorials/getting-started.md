@@ -27,8 +27,10 @@ in-process:
 | `uv pip install "eyas[prepare]"` | `eyas prepare` dataset download/convert | Needed once per dataset; heavy reader stack (datasets, pyarrow) |
 
 Every command below runs `uv run eyas` (drop the `uv run` prefix if `eyas` is already on your
-PATH). Working on Eyas itself — editing source,
-running `--cell` benchmark cells, or reading `configs/` and `examples/` — starts from a git
+PATH). You do not need a checkout for the published benchmark cells: `eyas run --cell
+<dataset>/<method>` assembles one from the spec shipped inside the package (`--dry-run`
+previews it offline) — see Step 2 of the [benchmark tutorial](benchmark.md). Working on
+Eyas itself — editing source, or reading `configs/` and `examples/` — starts from a git
 checkout with `uv sync`; see [CONTRIBUTING](https://github.com/Davidham3/eyas/blob/main/CONTRIBUTING.md).
 
 ## 2. One command to data

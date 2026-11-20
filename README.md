@@ -160,7 +160,25 @@ lines `base_url` and `api_key_env` are the whole connection to your model. No en
 The [guided tour](docs/tutorials/guided-tour.md) executes the complete loop on a built-in
 synthetic task: zero downloads, zero keys, zero GPU.
 
-Working on Eyas itself — a repo checkout with `uv sync`, `--cell` runs, and the `configs/`,
+### The published cells — zero-file runs
+
+The benchmark's dataset × method board ships inside the installed package as the config
+spec: `eyas run --cell <dataset>/<method>` assembles one published cell live and runs
+it — no YAML to write, no repo checkout. Preview any address offline first (assembles
+from the packaged spec, prints its digest, runs nothing):
+
+```bash
+uv run eyas run --cell pets/raw --dry-run
+```
+
+A real run resolves the cell's data paths relative to the current directory, so run it
+from where the datasets were built — after `uv run eyas prepare --dataset both`
+(pets + sroie), `uv run eyas run --cell pets/raw` just works. The address inventory is
+the published board ([quickstart benchmark](docs/07-quickstart-benchmark.md),
+[bench benchmark](docs/08-bench-benchmark.md)); `eyas gen-configs` exports a cell's
+exact effective YAML when you want to edit it.
+
+Working on Eyas itself — a repo checkout with `uv sync` and the `configs/`,
 `examples/` and `scripts/` trees — starts with
 `git clone https://github.com/Davidham3/eyas.git` and is covered in
 [CONTRIBUTING](CONTRIBUTING.md).

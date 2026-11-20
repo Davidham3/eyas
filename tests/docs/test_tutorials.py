@@ -46,6 +46,7 @@ RUN: dict[str, str] = {
     # guided-tour §8's export half: gen-configs assembles two published cells into
     # the gitignored tmp/ — zero GPU, zero data, executed verbatim (the GENERATED
     # header + why-notes rendering is the live contract)
+    "README#4": "the published-cells quickstart preview: --cell assembles from the packaged spec and --dry-run executes nothing (zero GPU, zero data, no run dir)",
     "guided-tour#0": "§1 heredoc writes the tour's tutorial_shapes.yaml in the CWD (the later tour commands consume it)",
     "guided-tour#8": "gen-configs export of pets raw+cot cells to gitignored tmp/ + GENERATED header check",
 }
