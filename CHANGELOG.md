@@ -4,6 +4,28 @@ All notable changes to Eyas are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the version follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0rc2] - 2026-11-20
+
+### Added
+
+- **Packaged config spec**: the five spec YAMLs now ship inside the `eyas`
+  package (`eyas/spec`), so `pip install "eyas[api]"` alone makes
+  `eyas run --cell <dataset>/<method>` work from any directory — no repo
+  checkout, no `--spec-dir`.
+- **Spec provenance**: generated cell YAMLs carry `spec=<sha12>` (a digest of
+  the shipped spec files) in the GENERATED header — a generated file can now
+  prove which shipped spec produced it; `run --cell` records the same value in
+  `run_config.json`.
+- **`eyas run --cell --dry-run`**: assemble a cell from the packaged spec and
+  exit — offline preview, and the release smoke check that proves the wheel
+  reads its own shipped spec.
+
+### Changed
+
+- `--spec-dir` (run/sweep/gen-configs) now defaults to the spec shipped inside
+  the installed package instead of a checkout-relative `configs/spec`; explicit
+  directories behave exactly as before.
+
 ## [0.1.0rc1] - 2026-11-19
 
 Initial public release.
