@@ -36,7 +36,14 @@ html_theme = "sphinx_book_theme"
 html_title = "Eyas"
 # Search/generative-engine surface: the landing description is what crawlers and
 # LLM answer engines quote; keywords stay honest (every listed method ships).
-html_meta = {
+# myst_html_meta, NOT Sphinx's html_meta: the toolchain (sphinx 9 + the book
+# theme) consumes no html_meta anywhere — meta reaches <head> only as docutils
+# meta nodes, which myst emits for every page (verified: the html_meta key
+# renders nothing). Keep every docs page in myst (.md) or this surface goes dark.
+myst_html_meta = {
+    # Google Search Console ownership (HTML-tag method: a Pages project page
+    # has no domain-DNS handle). Public by design — it ships in every page.
+    "google-site-verification": "N7UCH_IISEJrpFFZ_3sC2SEUZAjKGvwWEJtZ3y9tbFI",
     "description": (
         "Eyas is a performance-first automatic prompt optimization (APO) framework "
         "for multimodal models: eight optimizers on one strategy contract "
