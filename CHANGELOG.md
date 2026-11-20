@@ -24,7 +24,9 @@ All notable changes to Eyas are documented here. The format follows
 
 - `--spec-dir` (run/sweep/gen-configs) now defaults to the spec shipped inside
   the installed package instead of a checkout-relative `configs/spec`; explicit
-  directories behave exactly as before.
+  directories behave exactly as before. The spec files themselves moved from
+  `configs/spec/` to `src/eyas/spec/` (package data) — a checkout that pinned the
+  old default explicitly (`--spec-dir configs/spec`) must repoint to the new path.
 
 ## [0.1.0rc1] - 2026-11-19
 

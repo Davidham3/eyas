@@ -173,7 +173,9 @@ uv run eyas run --cell pets/raw --dry-run
 
 A real run resolves the cell's data paths relative to the current directory, so run it
 from where the datasets were built — after `uv run eyas prepare --dataset both`
-(pets + sroie), `uv run eyas run --cell pets/raw` just works. The address inventory is
+(pets + sroie), `uv run eyas run --cell pets/raw` just works. (Drop the `uv run` prefix
+throughout if `eyas` is already on your PATH — an activated venv, or a plain install.)
+The address inventory is
 the published board ([quickstart benchmark](docs/07-quickstart-benchmark.md),
 [bench benchmark](docs/08-bench-benchmark.md)); `eyas gen-configs` exports a cell's
 exact effective YAML when you want to edit it.
