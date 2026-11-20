@@ -654,3 +654,18 @@ def test_run_dry_run_without_cell_is_a_usage_error(tmp_path: Path) -> None:
     cfg = _write_cfg(tmp_path, "cfg", 42)
     with pytest.raises(SystemExit):
         main(["run", "--config", str(cfg), "--dry-run"])
+
+
+def test_run_dry_run_rejects_resume_and_output_dir(tmp_path: Path, capsys) -> None:
+    # house style of _cmd_run: parser-enforced mutual exclusion, never silent
+    # precedence — --dry-run executes nothing, so --resume/--output-dir have
+    # nothing left to say (final-review finding: they were accepted and ignored)
+    with pytest.raises(SystemExit) as excinfo:
+        main(["run", "--cell", "pets/raw", "--dry-run", "--resume", str(tmp_path / "nope")])
+    assert excinfo.value.code == 2
+    assert "--dry-run" in capsys.readouterr().err
+    with pytest.raises(SystemExit) as excinfo:
+        main(["run", "--cell", "pets/raw", "--dry-run", "--output-dir", str(tmp_path / "out")])
+    assert excinfo.value.code == 2
+    assert "--dry-run" in capsys.readouterr().err
+    assert not (tmp_path / "out").exists()

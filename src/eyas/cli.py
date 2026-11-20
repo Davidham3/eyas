@@ -391,6 +391,10 @@ def _cmd_run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
         parser.error("--variant only applies to --cell")
     if args.dry_run and not args.cell:
         parser.error("--dry-run only applies to --cell")
+    if args.dry_run and (args.resume or args.output_dir):
+        # the dry path executes nothing, so resume/output-dir have nothing to
+        # say — parser-enforced, matching the resume/output-dir rule above
+        parser.error("--dry-run cannot be combined with --resume or --output-dir")
 
     if args.cell:
         from eyas.configspec import cell_config, load_spec, spec_sha
