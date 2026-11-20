@@ -1,8 +1,10 @@
 """Config spec: the committed human-authored configuration surface.
 
-``configs/spec/`` is the single source for the quickstart cells and the
-benchmark matrix; per-cell YAMLs are not committed (generated on demand via
-``eyas gen-configs``, gitignored). Five files, split by review concern:
+``src/eyas/spec/`` is the single source for the quickstart cells and the
+benchmark matrix, shipped as package data with every install (an installed
+wheel carries the same five files — no checkout involved); per-cell YAMLs are
+not committed (generated on demand via ``eyas gen-configs``, gitignored). Five
+files, split by review concern:
 
     defaults.yaml    shared assembly skeleton (what every cell agrees on)
     datasets.yaml    per dataset: kind, task section, bench dirs, prompt assets
@@ -38,6 +40,7 @@ import hashlib
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -57,6 +60,7 @@ __all__ = [
     "benchmark_cells",
     "cell_config",
     "cell_digest",
+    "default_spec_dir",
     "load_spec",
     "render_cell_yaml",
     "spec_sha",
@@ -248,11 +252,20 @@ def _parse_variants(raw: dict[str, Any], spec_dir: Path) -> dict[str, VariantSpe
     return out
 
 
-def load_spec(spec_dir: str | Path = "configs/spec") -> Spec:
+def default_spec_dir() -> Path:
+    """The config spec shipped inside the eyas package: ``eyas/spec`` in an
+    installed wheel, ``src/eyas/spec`` in an editable checkout — one truth, no
+    checkout assumption and no sysconfig guessing. ``importlib.resources``
+    returns a filesystem path here because the package is never zip-loaded."""
+    return Path(str(resources.files("eyas") / "spec"))
+
+
+def load_spec(spec_dir: str | Path | None = None) -> Spec:
     """Load and validate the five spec files. Fail fast on any structural
     problem (unknown keys, dangling dataset/method/cell references) — before a
-    single cell runs."""
-    spec_dir = Path(spec_dir)
+    single cell runs. ``spec_dir=None`` reads the spec shipped inside the
+    package (``default_spec_dir()``); an explicit directory overrides."""
+    spec_dir = Path(spec_dir) if spec_dir is not None else default_spec_dir()
     defaults = _load_yaml(spec_dir / "defaults.yaml")
     for section in ("run", "backend"):
         _require_mapping(defaults.get(section), f"defaults.{section}")

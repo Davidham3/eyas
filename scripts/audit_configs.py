@@ -7,7 +7,8 @@ bad ``--set`` shapes). A config that passes only through a silent path does
 not mean what it says — such a config must be fixed, then run again.
 
 what: audits every shipped cell — the config spec's assembled product
-(``configs/spec``, the primary surface since spec-as-source) — plus every
+(``src/eyas/spec``, shipped inside the package; the primary surface since
+spec-as-source) — plus every
 per-run YAML under ``configs/`` (tutorial shapes, gen-configs exports) and
 ``outputs/**/run_config.json``, deduplicating by content hash (and by
 task-identity for the expensive dataset checks), then runs the *real* package
@@ -199,13 +200,25 @@ def iter_configs(configs_dir: Path, outputs_dir: Path, spec_dir: Path):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--spec", type=Path, default=REPO / "configs" / "spec")
+    ap.add_argument(
+        "--spec",
+        type=Path,
+        default=None,
+        help="spec directory (default: the spec shipped inside the eyas package)",
+    )
     ap.add_argument("--configs", type=Path, default=REPO / "configs")
     ap.add_argument("--outputs", type=Path, default=REPO / "outputs")
     ap.add_argument(
         "--verbose", action="store_true", help="print each failing config as it is checked"
     )
     args = ap.parse_args()
+
+    # the environment's shipped spec (ruling 5 of the rc2 plan: this script
+    # audits what THIS install carries, unlike the pytest gates, which grade
+    # the checkout)
+    from eyas.configspec import default_spec_dir
+
+    spec_dir = args.spec if args.spec is not None else default_spec_dir()
 
     total_files = 0
     parse_errors: list[tuple[str, str]] = []
@@ -215,7 +228,7 @@ def main() -> int:
     task_done: dict[str, list[str]] = {}  # task-key -> errors
     task_by_config: dict[str, str] = {}  # config-key -> task-key
 
-    for origin, cfg in iter_configs(args.configs, args.outputs, args.spec):
+    for origin, cfg in iter_configs(args.configs, args.outputs, spec_dir):
         total_files += 1
         if cfg is None:
             parse_errors.append((_display_path(origin), "unreadable/empty config"))

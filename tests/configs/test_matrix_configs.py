@@ -1,8 +1,8 @@
-"""configs/spec/benchmark.yaml contract tests (zero GPU, zero data files).
+"""benchmark.yaml contract tests for the packaged spec (zero GPU, zero data files).
 
 The published benchmark matrix (7 model tags x 6 open datasets x 8 strategies =
 336 cells) ships as ONE spec expanded by ``eyas sweep --spec`` — cell bases are
-assembled from configs/spec (golden parity pinned by tests/configs/test_configspec.py),
+assembled from the packaged spec (golden parity pinned by tests/configs/test_configspec.py),
 no per-cell YAMLs exist. These tests bind the expansion end-to-end so the spec
 cannot silently drift from the published protocol the cells carry:
 
@@ -35,7 +35,7 @@ from eyas.tasks.video_mcq import VideoMcqTask
 from eyas.tasks.vqa import VqaTask
 
 _ROOT = Path(__file__).resolve().parents[2]
-SPEC_DIR = _ROOT / "configs" / "spec"
+SPEC_DIR = _ROOT / "src" / "eyas" / "spec"
 
 MODELS = ("q2b", "q4b", "q9b", "ivl2b", "ivl4b", "ivl8b", "q38b")
 DATASETS = ("pets", "cub", "sroie", "textvqa", "gsm8k", "nextqa")

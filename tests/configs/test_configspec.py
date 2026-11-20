@@ -6,8 +6,9 @@ Main evidence: golden parity through digest manifests. The committed goldens
 and one per benchmark-matrix cell (in expansion order, because the axis
 declaration order is the backend-sharing contract) — plus the full readable
 JSON of a few representative cells, one per distinct assembly branch. Nothing
-here trusts the snapshot: every parity test recomputes the digests from
-``configs/spec`` through the assembler itself and compares whole tables
+here trusts the snapshot: every parity test recomputes the digests from the
+checkout's spec (``src/eyas/spec``) through the assembler itself and compares
+whole tables
 against the committed lines. Regeneration is never implicit — when the spec
 changes on purpose, ``uv run python scripts/gen_configspec_goldens.py --regen``
 rewrites the manifests and the regenerated diff is what a human reviews. The
@@ -26,13 +27,21 @@ from pathlib import Path
 
 import pytest
 
-from eyas.configspec import benchmark_cells, cell_config, cell_digest, load_spec
+import eyas
+from eyas.configspec import (
+    benchmark_cells,
+    cell_config,
+    cell_digest,
+    default_spec_dir,
+    load_spec,
+    spec_sha,
+)
 from eyas.engine.runtime import load_config
 from tests.support.spec_cells import cell_id, shipped_cells
 
 _ROOT = Path(__file__).resolve().parents[2]
 _GOLDEN = _ROOT / "tests" / "goldens" / "configspec"
-SPEC_DIR = _ROOT / "configs" / "spec"
+SPEC_DIR = _ROOT / "src" / "eyas" / "spec"
 
 DATASETS = {"gsm8k", "pets", "sroie", "cub", "textvqa", "nextqa", "mixed"}
 METHODS = {"raw", "cot", "hill_climb", "evoprompt", "opro", "ape", "protegi", "spo"}
@@ -106,6 +115,30 @@ def test_manifest_lines_are_canonical() -> None:
 def test_quickstart_manifest_covers_shipped_surface() -> None:
     ids = {cid for _, cid in _manifest_rows("quickstart.sha256")}
     assert ids == {cell_id(*c) for c in shipped_cells()}
+
+
+# ---------------------------------------------------------------------------
+# The packaged default: what an installed user (no checkout, any CWD) gets.
+# These are the tree==package agreement tests the gate contract (plan ruling
+# 5) rests on: the locators above stay tree-anchored, and these two pin that
+# the resolver's location and the argument-less load_spec() read THE SAME
+# bytes this checkout carries. A stale non-editable install grades red here.
+
+
+def test_default_spec_dir_is_the_packaged_spec() -> None:
+    d = default_spec_dir()
+    assert d == Path(eyas.__file__).resolve().parent / "spec"
+    assert sorted(p.name for p in d.glob("*.yaml")) == [
+        "benchmark.yaml",
+        "cells.yaml",
+        "datasets.yaml",
+        "defaults.yaml",
+        "methods.yaml",
+    ]
+
+
+def test_load_spec_without_argument_reads_the_same_spec() -> None:
+    assert spec_sha(load_spec()) == spec_sha(load_spec(SPEC_DIR))
 
 
 @pytest.mark.parametrize("stem", FEATURE_CELLS)

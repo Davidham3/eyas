@@ -499,8 +499,9 @@ core.
 Everything in §1-§11 is implemented as written: the eight strategies
 (`raw`, `cot`, `hill_climb`, `evoprompt`, `opro`, `ape`, `protegi`, `spo`), the two
 registries, the managed loop, the typed checkpoint/resume path, and the config spec
-`configs/spec/` (the assembled `<ds>/<method>` cells plus the benchmark spec
-`configs/spec/benchmark.yaml`: 7 tags × 6 datasets × 8 methods; published results in
+`src/eyas/spec/` (package data, shipped with every install — the assembled
+`<ds>/<method>` cells plus the benchmark spec `src/eyas/spec/benchmark.yaml`:
+7 tags × 6 datasets × 8 methods; published results in
 `docs/08-bench-benchmark.md`). The contract tests under `tests/` are the executable
 form of this document.
 

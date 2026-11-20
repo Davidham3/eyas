@@ -2,7 +2,8 @@
 
 **What you'll learn:** every section of a real run config, what the strategy and the managed loop each do per round, and how two methods share one task and one backend.
 
-[Getting started](getting-started.md) ran the docs' flagship story with one config: the TextVQA × OPRO profile, printed there in inline form as `quickstart_textvqa_opro.yaml`. Small enough to read whole, real enough to be the file behind published numbers, and the best place to see the anatomy of an Eyas run. (Repository checkouts can regenerate the same config from [`configs/spec`](../../configs/spec) with `uv run eyas gen-configs --cell textvqa/opro --variant openai` — a developer path; the spec stays the source.)
+[Getting started](getting-started.md) ran the docs' flagship story with one config: the TextVQA × OPRO profile, printed there in inline form as `quickstart_textvqa_opro.yaml`. Small enough to read whole, real enough to be the file behind published numbers, and the best place to see the anatomy of an Eyas run. (Repository checkouts can regenerate the same config from
+[`src/eyas/spec`](../../src/eyas/spec) with `uv run eyas gen-configs --cell textvqa/opro --variant openai` — a developer path; the spec stays the source.)
 
 ## The config, piece by piece
 

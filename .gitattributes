@@ -1,0 +1,3 @@
+# The config spec is digest-over-bytes package data (eyas.configspec.spec_sha):
+# pin LF so a Windows checkout cannot fork the spec digest.
+*.yaml text eol=lf

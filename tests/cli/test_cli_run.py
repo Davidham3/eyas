@@ -340,12 +340,12 @@ def test_report_dispatch_prints_table(
 
 # ---------------------------------------------------------------------------
 # E2 command surface: run --cell / sweep --spec / gen-configs. The cell bodies
-# come from the committed configs/spec (the same assembly the golden-parity
+# come from the packaged spec in this checkout (the same assembly the golden-parity
 # tests pin); here the CLI boundary is what's under test: mutual exclusion,
 # the spec_sha stamp, expansion plumbing, and the generated-file contract.
 
 
-_SPEC_DIR = Path(__file__).resolve().parents[2] / "configs" / "spec"
+_SPEC_DIR = Path(__file__).resolve().parents[2] / "src" / "eyas" / "spec"
 _GOLDEN = Path(__file__).resolve().parents[2] / "tests" / "goldens" / "configspec"
 _GOLDEN_CELLS = _GOLDEN / "cells"
 _QUICKSTART_MANIFEST = _GOLDEN / "quickstart.sha256"
@@ -591,3 +591,15 @@ def test_gen_configs_rejects_variant_without_cell(tmp_path: Path, capsys) -> Non
         main(["gen-configs", "--variant", "openai", "--out", str(tmp_path)])
     assert excinfo.value.code == 2
     assert "--variant requires --cell" in capsys.readouterr().err
+
+
+def test_gen_configs_default_spec_dir_from_any_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # the packaged default must not assume a checkout layout under CWD: an
+    # installed user runs gen-configs from any directory (rc2 ruling: the spec
+    # travels inside the package, not next to the CWD)
+    monkeypatch.chdir(tmp_path)
+    out = tmp_path / "cells"
+    assert main(["gen-configs", "--cell", "pets/raw", "--out", str(out)]) == 0
+    assert (out / "pets_raw.yaml").exists()

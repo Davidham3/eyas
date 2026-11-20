@@ -7,7 +7,7 @@ detects any semantic change to a cell while staying immune to cosmetic
 reformatting, so the snapshot corpus collapses to two hash manifests plus a
 handful of deliberately readable representative cells.
 
-what: re-derives, from ``configs/spec``,
+what: re-derives, from the packaged spec (``src/eyas/spec``),
 
   * ``tests/goldens/configspec/quickstart.sha256`` — one ``<digest>  <cell_id>``
     line per shipped quickstart cell (the ``shipped_cells()`` surface), sorted

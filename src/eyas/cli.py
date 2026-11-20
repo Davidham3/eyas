@@ -44,19 +44,22 @@ def main(argv: list[str] | None = None) -> int:
         "--cell",
         metavar="DATASET/METHOD",
         help=(
-            "Assemble one quickstart cell from configs/spec and run it directly "
-            "(no YAML file), e.g. --cell pets/raw"
+            "Assemble one quickstart cell from the packaged config spec and run "
+            "it directly (no YAML file), e.g. --cell pets/raw"
         ),
     )
     run_p.add_argument(
         "--variant",
-        help="(--cell mode) assembled variant, e.g. openai (see configs/spec/cells.yaml)",
+        help="(--cell mode) assembled variant, e.g. openai (see the packaged spec's cells.yaml)",
     )
     run_p.add_argument(
         "--spec-dir",
-        default="configs/spec",
+        default=None,
         metavar="DIR",
-        help="(--cell mode) config-spec directory (default: configs/spec)",
+        help=(
+            "(--cell mode) config-spec directory "
+            "(default: the spec shipped inside the eyas package)"
+        ),
     )
     run_p.add_argument(
         "--set",
@@ -110,17 +113,21 @@ def main(argv: list[str] | None = None) -> int:
         "--spec",
         metavar="BENCHMARK.yaml",
         help=(
-            "Benchmark spec inside a config spec (configs/spec/benchmark.yaml): "
-            "expand the published matrix from configs/spec with no per-cell "
+            "Benchmark spec inside a config spec (benchmark.yaml of the spec "
+            "dir): expand the published matrix from the packaged spec with no "
+            "per-cell "
             "files — cell bases are assembled (axes × combos; --filter/--set as "
             "in --matrix mode)."
         ),
     )
     sweep_p.add_argument(
         "--spec-dir",
-        default="configs/spec",
+        default=None,
         metavar="DIR",
-        help="(--spec mode) config-spec directory holding benchmark.yaml (default: configs/spec)",
+        help=(
+            "(--spec mode) config-spec directory holding benchmark.yaml "
+            "(default: the spec shipped inside the eyas package)"
+        ),
     )
     sweep_p.add_argument(
         "--dry-run",
@@ -150,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
 
     gen_p = sub.add_parser(
         "gen-configs",
-        help="Export editable cell YAMLs from configs/spec (escape hatch; products are gitignored)",
+        help="Export editable cell YAMLs from the packaged spec (escape hatch; products are gitignored)",
     )
     gen_p.add_argument(
         "--cell",
@@ -169,9 +176,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     gen_p.add_argument(
         "--spec-dir",
-        default="configs/spec",
+        default=None,
         metavar="DIR",
-        help="Config-spec directory (default: configs/spec)",
+        help="Config-spec directory (default: the spec shipped inside the eyas package)",
     )
 
     args = parser.parse_args(argv)
@@ -216,7 +223,7 @@ def _cmd_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int
             axes_spec = benchmark_axes_spec(spec)
             if Path(args.spec).resolve() != axes_spec.path.resolve():
                 raise ValueError(
-                    f"--spec {args.spec} is not the benchmark section of {args.spec_dir} "
+                    f"--spec {args.spec} is not the benchmark section of {spec.path} "
                     f"(expected {axes_spec.path})"
                 )
             filters = parse_filters(args.filter, axes_spec)
@@ -303,7 +310,7 @@ def _cmd_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int
 
 
 def _cmd_gen_configs(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
-    """Export editable cell YAMLs from configs/spec (the escape hatch): default
+    """Export editable cell YAMLs from the packaged spec (the escape hatch): default
     every dataset x method plus the variant mirrors the spec declares available.
     Products live under configs/generated (gitignored) and carry a GENERATED
     header — the committed surface stays the spec. Validation is fail-fast:
@@ -367,7 +374,7 @@ def _cmd_gen_configs(parser: argparse.ArgumentParser, args: argparse.Namespace) 
 
 def _cmd_run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     """Run one contract-driven optimization: a sectioned YAML, or one cell
-    assembled live from configs/spec (``--cell``)."""
+    assembled live from the packaged spec (``--cell``)."""
     if args.resume and args.output_dir:
         # Documented contract, parser-enforced: resume reuses an existing
         # run dir, so --output-dir has nothing left to say (no silent

@@ -25,7 +25,8 @@ uv run mypy src                  # type check
 - Contract tests run on the `ScriptedMockBackend` (zero GPU): every strategy, backend
   switch, judge, and runtime behavior is testable without an engine. If you add a
   component, write the contract test in `tests/` before the implementation.
-- **Changing the config spec (`configs/spec/`)?** Regenerate the golden manifests with
+- **Changing the config spec (`src/eyas/spec/`, shipped inside the package)?** Regenerate
+  the golden manifests with
   `uv run python scripts/gen_configspec_goldens.py --regen` and read the diff before committing
   — the manifests under `tests/goldens/configspec/` are a review surface: a drifted
   digest line is a real behavior change. CI validates the same invariant through the

@@ -4,11 +4,14 @@
 
 The full study design, the result tables and the conclusions live in the [quickstart benchmark design note](../07-quickstart-benchmark.md). This tutorial is the hands-on path through it.
 
-**Developer / repository-checkout path.** The commands below use the repository's `configs/spec`
-cell tree and `scripts/` helpers, which are not shipped in the wheel. pip users should follow
-the inline-YAML tutorials ([Getting started](getting-started.md), [Your first
-optimization](first-optimization.md)); reproducing the published benchmark from an installed
-wheel is not a supported path.
+**Developer / repository-checkout path.** The commands below run from a repository
+checkout and use the `scripts/` dataset-build helpers. The spec itself now ships inside
+the installed package (`src/eyas/spec` in the checkout, `eyas/spec` in a wheel), so a
+pip user holds the identical spec — but reproducing the published benchmark end to end
+additionally needs the bench-data build recipes that live in `scripts/`, so the full
+study stays documented as the checkout path. For everyday optimization, pip users
+follow the inline-YAML tutorials ([Getting started](getting-started.md), [Your first
+optimization](first-optimization.md)).
 
 ## What is being reproduced
 
@@ -40,7 +43,7 @@ The script builds `datasets/quickstart/<ds>/{data,images}/`, downloading through
 
 ## Step 2 — single run
 
-Cells are assembled from [`configs/spec`](../../configs/spec) — there are no per-cell files to read before running; `--cell <dataset>/<method>` is the whole address:
+Cells are assembled from the packaged config spec ([`src/eyas/spec`](../../src/eyas/spec) in the checkout) — there are no per-cell files to read before running; `--cell <dataset>/<method>` is the whole address:
 
 ```bash
 uv run eyas run --cell pets/raw
@@ -62,10 +65,10 @@ uv run eyas sweep --config configs/generated/pets_raw.yaml \
 
 `sweep` runs configs sequentially (one `--config` per file) and aborts the sweep if any run fails. Each cell gets its own run directory; re-running a cell reuses records only when it re-enters that directory (`--resume`, or a fixed output/cache dir).
 
-For a large factorial study there is no need to enumerate one file per cell: `--spec` expands the published benchmark spec (facet axes over assembled cells) directly; the published bench study runs exactly this way (`configs/spec/benchmark.yaml`, docs/08 §2-3). It reads the larger `datasets/bench*` directories, built with the recipe in docs/08 §1 (Step 1 above builds the quickstart `datasets/quickstart/` tree):
+For a large factorial study there is no need to enumerate one file per cell: `--spec` expands the published benchmark spec (facet axes over assembled cells) directly; the published bench study runs exactly this way (`src/eyas/spec/benchmark.yaml`, docs/08 §2-3). It reads the larger `datasets/bench*` directories, built with the recipe in docs/08 §1 (Step 1 above builds the quickstart `datasets/quickstart/` tree):
 
 ```bash
-uv run eyas sweep --spec configs/spec/benchmark.yaml \
+uv run eyas sweep --spec src/eyas/spec/benchmark.yaml \
   --filter tag=q2b --filter dataset=pets \
   --set run.seed=42 \
   --set backend.params.model_path=/path/to/Qwen3.5-2B

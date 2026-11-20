@@ -1,6 +1,6 @@
 """Shipped-config validation under spec-as-source (zero GPU).
 
-The per-cell YAMLs are retired: the shipped surface is configs/spec, and each
+The per-cell YAMLs are retired: the shipped surface is the packaged spec, and each
 cell's effective config is the assembler's product (golden parity pinned by
 tests/configs/test_configspec.py; the shared accessor tests/support/spec_cells.py states the
 cell set). For every shipped run config — every spec cell (board x method grid

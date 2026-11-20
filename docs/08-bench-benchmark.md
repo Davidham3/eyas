@@ -97,7 +97,7 @@ quickstart slices are unchanged on disk (not rebuilt).
 
 ## 2. Config matrix (one spec in the repo)
 
-The published cells are ONE spec, `configs/spec/benchmark.yaml`, expanded by
+The published cells are ONE spec, `src/eyas/spec/benchmark.yaml`, expanded by
 `eyas sweep --spec` (facet axes whose values are override dicts; cell bases are
 assembled from the config spec, no base files read). No per-cell YAMLs exist:
 each run directory persists its effective config and the spec content hash
@@ -117,7 +117,7 @@ pools) and golden-parity to the published wave (`tests/configs/test_configspec.p
   datasets.
 - `dataset` (`pets,cub,sroie,textvqa,nextqa,gsm8k`) → the data directories the
   published runs used (`datasets/bench/...`, carried by each dataset's `bench:`
-  bundle in `configs/spec/datasets.yaml`).
+  bundle in `src/eyas/spec/datasets.yaml`).
 - `method` (the 8 published strategies) → assembles the method identity onto the
   dataset contract — including the KIE `ape`/`opro` columns, which need no
   synthesis (the kie dataset contract + those method identities assemble to the
@@ -140,7 +140,7 @@ ivl4b / ivl8b / q38b × seeds
 failures**. The executable command:
 
 ```
-uv run eyas sweep --spec configs/spec/benchmark.yaml \
+uv run eyas sweep --spec src/eyas/spec/benchmark.yaml \
   --filter tag=q2b --filter dataset=pets \
   --set run.seed=42 \
   --set backend.params.model_path=<MODELS_ROOT>/Qwen/Qwen3.5-2B \
@@ -160,7 +160,7 @@ output-root prefix so they never touch a published run dir (cub replaces video
 with image; the q9b arm is the sentence-cost control):
 
 ```
-uv run eyas sweep --spec configs/spec/benchmark.yaml \
+uv run eyas sweep --spec src/eyas/spec/benchmark.yaml \
   --filter tag=q4b --filter dataset=nextqa --filter method=raw \
   --set run.seed=42 \
   --set 'strategy.seeds=["Classify the content of the target video. Reply with exactly one of the listed options and nothing else."]' \

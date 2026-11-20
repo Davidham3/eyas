@@ -103,7 +103,7 @@ placeholder inside the config).
   them verbatim; an evoprompt GA cell whose pool holds < 2 distinct prompts is
   rejected at init), ape default 4 candidates in a single round, spo
   20 rounds, protegi 3 rounds; hyperparameters
-  in `configs/spec` (the assembled `<ds>/<method>` cells). Every shipped cell pins its
+  in the packaged spec (`src/eyas/spec`; the assembled `<ds>/<method>` cells). Every shipped cell pins its
   budget allocator explicitly: `budget.name` + the allocator's cap parameters
   (flat = parameterless, pinned with empty params; bandit = all four
   constructor parameters: `eval_rounds`/`samples_per_eval`/`c`/`keep_top`). No
@@ -355,7 +355,7 @@ uv run --extra prepare eyas prepare --dataset textvqa --source auto
 # data lands in datasets/quickstart/<ds>/{data,images}/; point each config's model_path
 # (or, for the OpenAI arm, base_url / model) at a local Qwen3.5-9B
 
-# A single run is the quickest smoke test — the cell assembles from configs/spec
+# A single run is the quickest smoke test — the cell assembles from the packaged spec
 # (its directory is not read by the aggregator):
 uv run eyas run --cell pets/raw --set run.seed=42
 uv run eyas report --run outputs/quickstart_pets_raw/<stamp> --format md

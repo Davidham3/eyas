@@ -44,7 +44,7 @@ Honest size note: this streams the labeled validation split of `lmms-lab/TextVQA
 ## 3. The config — the whole secret is two lines
 
 Save this as `quickstart_textvqa_opro.yaml`. It is the story cell (TextVQA × OPRO, rounds=4)
-in inline form; a repository checkout can regenerate the same file from `configs/spec` with
+in inline form; a repository checkout can regenerate the same file from `src/eyas/spec` with
 `uv run eyas gen-configs --cell textvqa/opro --variant openai` (developer path — the spec stays the
 source). `base_url`/`model` are placeholders: point them at your endpoint via
 `--set backend.params.base_url=... --set backend.params.model=...` (API key via the

@@ -353,7 +353,8 @@ config-spec tree, which is not shipped in the wheel; pip users can skip it.
 Everything above drove a hand-written file — `tutorial_shapes.yaml` is the
 tour's own teaching artifact (shipped as `configs/tutorial_shapes.yaml` in a
 checkout). The cells behind the published numbers are not files at all: each
-one is an address in the config spec (`configs/spec/`), assembled into the full
+one is an address in the config spec (`src/eyas/spec/`, shipped inside the installed
+package), assembled into the full
 config at run time. Two commands own that surface, and you have met both shapes
 already.
 
@@ -382,7 +383,7 @@ The exported cell re-enters §2 unchanged:
 `uv run eyas run --config tmp/tour_cells/pets_raw.yaml`. For an endpoint served over
 the OpenAI protocol the address takes a variant —
 `--cell pets/raw --variant openai` — and a whole factorial study expands the
-same spec in one wave (`--spec configs/spec/benchmark.yaml` + `--filter`s) in
+same spec in one wave (`--spec src/eyas/spec/benchmark.yaml` + `--filter`s) in
 [Reproducing the benchmark](benchmark.md).
 
 One habit to keep: exported cells belong in `tmp/` (already gitignored). The
