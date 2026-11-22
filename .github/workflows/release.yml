@@ -90,6 +90,25 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # TestPyPI's simple index is CDN-cached (max-age=600): a smoke job that
+      # starts right after the upload can see only older releases and fail the
+      # install. Poll until the freshly published wheel is listed, then install.
+      - name: Wait for TestPyPI to list the release
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          url="https://test.pypi.org/simple/eyas/"
+          for attempt in $(seq 1 30); do
+            if curl -fsSL -H 'Cache-Control: no-cache' "$url" | grep -q "eyas-${version}-py3-none-any.whl"; then
+              echo "TestPyPI lists eyas-${version} (attempt ${attempt})"
+              exit 0
+            fi
+            echo "waiting for TestPyPI to list eyas-${version} (attempt ${attempt}/30)"
+            sleep 20
+          done
+          echo "::error::TestPyPI did not list eyas-${version} within 10 minutes"
+          exit 1
+
       - name: Install the published wheel from TestPyPI
         shell: bash
         run: |

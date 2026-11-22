@@ -347,3 +347,18 @@ def test_setup_uv_is_pinned_to_the_lockfile_interpreter_tool() -> None:
         if _has_uses(step, "astral-sh/setup-uv@")
     }
     assert pins == {"0.11.21"}
+
+
+def test_smoke_waits_for_the_testpypi_index_to_list_the_release() -> None:
+    """TestPyPI's simple index is CDN-cached (max-age=600); smoke must not
+    install before the freshly published wheel is visible on its edge."""
+    doc = _workflow()
+    steps = doc["jobs"]["smoke"]["steps"]
+    names = [step.get("name", "") for step in steps]
+    wait_index = names.index("Wait for TestPyPI to list the release")
+    install_index = names.index("Install the published wheel from TestPyPI")
+    assert wait_index < install_index
+    run = steps[wait_index]["run"]
+    assert "https://test.pypi.org/simple/eyas/" in run
+    assert "${GITHUB_REF_NAME#v}" in run
+    assert "sleep" in run and "exit 1" in run
