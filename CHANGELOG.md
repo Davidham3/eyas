@@ -4,6 +4,14 @@ All notable changes to Eyas are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the version follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2026-11-23
+
+First stable release. Package code is unchanged from `0.1.0rc2`; this release adds the
+versioned documentation site (`stable` and `latest` aliases, a version selector, and one
+snapshot per final release tag), the documented WSL2 and small-GPU guidance for the vLLM
+backend, and the pinned local docs toolchain. See the release-candidate sections below
+for the full feature record.
+
 ## [0.1.0rc2] - 2026-11-20
 
 ### Added

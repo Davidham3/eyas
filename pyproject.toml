@@ -1,6 +1,6 @@
 [project]
 name = "eyas"
-version = "0.1.0rc2"
+version = "0.1.0"
 description = "Train sharp-eyed prompts for multimodal models. A performance-first APO (automatic prompt optimization) framework for text, image and video tasks."
 requires-python = ">=3.12,<3.15"
 license = "Apache-2.0"
