@@ -524,7 +524,7 @@ def test_gen_configs_single_cell_round_trips_golden(tmp_path: Path, capsys) -> N
     assert "gen-configs: 1 YAMLs" in out
     path = tmp_path / "gsm8k_cot.yaml"
     text = path.read_text(encoding="utf-8")
-    assert text.startswith("# GENERATED from configs/spec — do not edit")
+    assert text.startswith("# GENERATED from the packaged spec — do not edit")
     # provenance stamp (rc2): the header carries the spec content digest —
     # the same 12-hex value spec_sha records in run_config.json — as the
     # last token before the closing paren

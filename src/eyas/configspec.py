@@ -504,7 +504,7 @@ def render_cell_yaml(spec: Spec, dataset: str, method: str, variant: str | None 
     a generated file proves which shipped spec produced it."""
     config = cell_config(spec, dataset, method, variant)
     lines = [
-        "# GENERATED from configs/spec — do not edit (eyas gen-configs"
+        "# GENERATED from the packaged spec — do not edit (eyas gen-configs"
         f" --cell {dataset}/{method}"
         + (f" --variant {variant}" if variant else "")
         + f" spec={spec_sha(spec)})"

@@ -1,10 +1,11 @@
-# The published benchmark matrix (E2: cell bases are assembled from
-# configs/spec, no per-cell YAMLs exist). 7 model tags x 6 open datasets x
-# 8 strategies = 336 cells, expanded by `eyas sweep --spec
-# configs/spec/benchmark.yaml`. One sweep cell set (one engine, 8 cells)
-# = filter one tag + one dataset and pin the seed with --set:
+# The published benchmark matrix (E2: cell bases are assembled from the
+# spec shipped inside the eyas package (src/eyas/spec), no per-cell YAMLs
+# exist). 7 model tags x 6 open datasets x 8 strategies = 336 cells,
+# expanded by `eyas sweep --spec src/eyas/spec/benchmark.yaml`. One sweep
+# cell set (one engine, 8 cells): filter one tag + one dataset and pin the
+# seed with --set:
 #
-#   uv run eyas sweep --spec configs/spec/benchmark.yaml \
+#   uv run eyas sweep --spec src/eyas/spec/benchmark.yaml \
 #     --filter tag=q2b --filter dataset=pets \
 #     --set run.seed=42 \
 #     --output-root outputs/matrix_q2b_pets_s42

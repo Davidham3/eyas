@@ -376,7 +376,7 @@ head -1 tmp/tour_cells/pets_raw.yaml
 ```
 
 ```text
-# GENERATED from configs/spec — do not edit (eyas gen-configs --cell pets/raw spec=<12-hex>)
+# GENERATED from the packaged spec — do not edit (eyas gen-configs --cell pets/raw spec=<12-hex>)
 ```
 
 That trailing `spec=` token is the digest of the shipped spec files — the same
