@@ -1,6 +1,7 @@
 """Sphinx build configuration for the Eyas documentation (MyST-NB).
 
-Build:  uv sync --group docs && uv run sphinx-build -b html docs docs/_build/html
+Build:  uv sync --group docs && uv pip install "sphinx-multiversion-scylla==0.3.9"
+        && uv run sphinx-build -b html docs docs/_build/html
 
 Notebook execution is OFF: every page is plain MyST markdown, so the site
 builds on any CPU machine with no model, no GPU and no network. If executable

@@ -227,7 +227,7 @@ or any mix of the three, with shipped benchmark recipes for `gsm8k`, `cub`, `pet
 ## Documentation
 
 The docs site lives in [`docs/`](docs/index.md) (build:
-`uv sync --group docs && uv run sphinx-build -b html docs docs/_build/html`). Tutorials:
+`uv sync --group docs && uv pip install "sphinx-multiversion-scylla==0.3.9" && uv run sphinx-build -b html docs docs/_build/html`). Tutorials:
 [getting started](docs/tutorials/getting-started.md), [guided tour](docs/tutorials/guided-tour.md),
 [your first optimization](docs/tutorials/first-optimization.md),
 [understanding results](docs/tutorials/understanding-results.md),

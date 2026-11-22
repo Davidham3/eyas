@@ -91,6 +91,13 @@ def test_write_redirects_falls_back_to_main(tmp_path: Path) -> None:
     assert "../main/" in stable
 
 
+def test_documented_local_build_installs_the_pinned_tool() -> None:
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    conf = CONF.read_text(encoding="utf-8")
+    assert "sphinx-multiversion-scylla==0.3.9" in readme
+    assert "sphinx-multiversion-scylla==0.3.9" in conf
+
+
 def test_docs_workflow_builds_every_version() -> None:
     doc = yaml.safe_load((REPO / ".github/workflows/docs.yml").read_text(encoding="utf-8"))
     steps = [step for job in doc["jobs"].values() for step in job.get("steps", [])]
