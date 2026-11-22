@@ -98,6 +98,14 @@ def test_documented_local_build_installs_the_pinned_tool() -> None:
     assert "sphinx-multiversion-scylla==0.3.9" in conf
 
 
+def test_docs_workflow_keeps_the_logo_at_a_stable_url() -> None:
+    doc = yaml.safe_load((REPO / ".github/workflows/docs.yml").read_text(encoding="utf-8"))
+    steps = [step for job in doc["jobs"].values() for step in job.get("steps", [])]
+    runs = "\n".join(step.get("run", "") for step in steps)
+    assert "docs/_static/eyas.svg" in runs
+    assert "site/_static/eyas.svg" in runs
+
+
 def test_docs_workflow_builds_every_version() -> None:
     doc = yaml.safe_load((REPO / ".github/workflows/docs.yml").read_text(encoding="utf-8"))
     steps = [step for job in doc["jobs"].values() for step in job.get("steps", [])]
