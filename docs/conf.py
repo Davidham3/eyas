@@ -15,6 +15,7 @@ author = "the Eyas authors"
 extensions = [
     "myst_nb",
     "sphinx_copybutton",
+    "sphinx_multiversion",
 ]
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
@@ -30,6 +31,28 @@ myst_heading_anchors = 3
 
 # -- notebook execution ------------------------------------------------------
 nb_execution_mode = "off"
+
+# -- versioned builds --------------------------------------------------------
+# Final releases only: rc tags are rehearsal artifacts and are not published
+# as docs. `main` is the in-development/latest build.
+smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"
+smv_branch_whitelist = r"^main$"
+smv_remote_whitelist = r"^origin$"
+smv_released_pattern = r"^refs/tags/v\d+\.\d+\.\d+$"
+smv_outputdir_format = "{ref.name}"
+
+templates_path = ["_templates"]
+# book theme's default primary sidebar items, with the version selector
+# inserted between the search field and the navigation tree.
+html_sidebars = {
+    "**": [
+        "navbar-logo.html",
+        "icon-links.html",
+        "search-button-field.html",
+        "versioning.html",
+        "sbt-sidebar-nav.html",
+    ]
+}
 
 # -- HTML output -------------------------------------------------------------
 html_theme = "sphinx_book_theme"
