@@ -112,6 +112,11 @@ class BackendPool:
     (the per-run explicit close in run_experiment is precisely skipped when
     pooling — the pinned engine-release semantics survive, the release just happens once at
     pool end instead of once per run).
+
+    Single residency: a core engine holds the GPU, so the pool keeps at most
+    one resident core — building a DIFFERENT block closes the current one
+    first (otherwise the second engine loads beside the first and the memory
+    precheck refuses it). Repeated identical keys still share one instance.
     """
 
     def __init__(self) -> None:
@@ -125,6 +130,10 @@ class BackendPool:
         key = self._key(backend_cfg)
         backend = self._pool.get(key)
         if backend is None:
+            if self._pool:
+                # different block requested: release the resident core(s) BEFORE
+                # building, or the new engine loads while the old one is resident
+                self.close_all()
             backend = _build_backend(backend_cfg)
             self._pool[key] = backend
         return backend

@@ -31,6 +31,8 @@ from eyas.engine.runtime import run_plan, run_sweep
 
 BUILDS: list[str] = []
 CLOSES: list[str] = []
+# shared build/close order — pins the eviction contract (close-before-build)
+EVENTS: list[tuple[str, str]] = []
 
 
 @base_registry.register_backend("counting_mock")
@@ -41,9 +43,11 @@ class CountingMock(ScriptedMockBackend):
         super().__init__(**kwargs)
         self.tag = str(kwargs.get("responses"))
         BUILDS.append(self.tag)
+        EVENTS.append(("build", self.tag))
 
     def close(self) -> None:
         CLOSES.append(self.tag)
+        EVENTS.append(("close", self.tag))
         super().close()
 
 
@@ -63,9 +67,11 @@ def make_cfg(name: str, responses: str) -> dict[str, Any]:
 def _tally():
     BUILDS.clear()
     CLOSES.clear()
+    EVENTS.clear()
     yield
     BUILDS.clear()
     CLOSES.clear()
+    EVENTS.clear()
 
 
 def test_shared_sweep_builds_core_once_and_closes_once(tmp_path: Path):
@@ -121,3 +127,32 @@ def test_pool_shares_core_but_keeps_per_run_layers(tmp_path: Path):
     finally:
         ctx1.evaluator.backend.close()
         ctx2.evaluator.backend.close()
+
+
+def test_sweep_evicts_resident_core_before_building_a_different_one(tmp_path: Path):
+    """Single-residency contract: a core engine occupies the GPU, so the pool
+    must release the previous core BEFORE building a different block —
+    otherwise the second engine loads while the first is still resident and
+    the memory precheck (correctly) refuses it. A,B,A therefore builds three
+    cores with each close strictly preceding the next build; the identical-key
+    sharing win is untouched."""
+    cfgs = [make_cfg("r1", "red"), make_cfg("r2", "blue"), make_cfg("r3", "red")]
+    run_dirs = run_sweep(cfgs, tmp_path / "root", share_backends=True)
+    assert len(run_dirs) == 3
+    assert all((d / "result.json").exists() for d in run_dirs)
+    assert EVENTS == [
+        ("build", "['red']"),
+        ("close", "['red']"),
+        ("build", "['blue']"),
+        ("close", "['blue']"),
+        ("build", "['red']"),
+        ("close", "['red']"),
+    ]
+
+
+def test_sweep_identical_block_never_evicts_mid_sweep(tmp_path: Path):
+    """Guard against over-evicting: identical backend blocks must still share
+    exactly one core for the whole sweep (the whole point of pooling)."""
+    cfgs = [make_cfg("r1", "red"), make_cfg("r2", "red")]
+    run_sweep(cfgs, tmp_path / "root", share_backends=True)
+    assert EVENTS == [("build", "['red']"), ("close", "['red']")]
