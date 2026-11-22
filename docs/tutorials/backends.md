@@ -52,6 +52,25 @@ backend:
 - `prefetch_workers > 0` enables the framework's image prefetch loader: images are decoded in worker processes and handed to the engine as loaded payloads, so the GPU never waits on disk.
 - `engine_kwargs` are engine-native; tune them for your card and serving profile.
 
+#### WSL2 and small GPUs
+
+**WSL2:** vLLM 0.25 and later default to the V2 model runner, which requires CUDA
+unified virtual addressing (UVA). WSL2's GPU paravirtualization does not expose UVA, so
+the engine fails at startup with `RuntimeError: UVA is not available`. Export
+`VLLM_USE_V2_MODEL_RUNNER=0` before launching to fall back to the V1 runner (same
+results; slightly slower host-to-device staging). This is a vLLM variable, not an Eyas
+one; native Linux is unaffected, and native Windows has no official vLLM build (its
+WSL2/Docker path hits the same limitation).
+
+**Small cards:** the lifecycle manager folds `gpu_memory_utilization` to measured free
+memory minus the warmup reserve (`EYAS_VLLM_WARMUP_RESERVE_GIB`, default `4.5` GiB). On
+an 8 GB card shared with a desktop, that default can fold the fraction below `0.5` and
+the engine refuses to start. Lower the reserve (for example
+`EYAS_VLLM_WARMUP_RESERVE_GIB=1.0`) and cap `engine_kwargs.max_model_len` /
+`max_num_seqs` / `max_num_batched_tokens`. Measured here: a 2B INT4
+(compressed-tensors) model over 74 pet images peaked at 7.4 of 8.2 GB and finished in
+223 s; a 4B INT4 model needs noticeably more headroom.
+
 ### OpenAI-compatible endpoints (`openai`)
 
 ```yaml
